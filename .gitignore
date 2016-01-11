@@ -1,0 +1,4 @@
+!.gitignore
+app/config/config.local.neon
+/nbproject
+composer.lock
