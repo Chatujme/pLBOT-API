@@ -19,9 +19,14 @@
 		"nette/security": "^2.3",
 		"nette/utils": "^2.3",
 		"latte/latte": "^2.3",
-		"tracy/tracy": "^2.3"
+		"tracy/tracy": "^2.3",
+    "lury/lury-tools": "dev-master"
 	},
 	"require-dev": {
 		"nette/tester": "^1.6"
-	}
+	},
+  "repositories": [{
+          "type": "vcs",
+          "url": "ssh://git@git.mvyvoj.cz:2202/lury/lury-tools.git"
+      }]
 }

@@ -1,5 +1,5 @@
 <?php
-namespace App;
+namespace App\Presenters;
 /**
  * Description of BasePresenter
  *
@@ -9,7 +9,11 @@ use Nette\Application\UI\Presenter;
 
 class BasePresenter extends Presenter{
     
+    
+    public $version = 1.00;
+    
     protected function startup() {
         parent::startup();
+        $this->template->version = $this->version;
     }
 }
