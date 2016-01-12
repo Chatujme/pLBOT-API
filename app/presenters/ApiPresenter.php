@@ -56,7 +56,7 @@ class ApiPresenter extends BasePresenter {
             
             case "zítra":
             case "zitra":
-                preg_match('#<td class="td-vdz">Z.itra</td>\n.+m. sv.tek.+>(.+)</a>#i',$response,$r);
+                preg_match('#<td class="td-vdz">Z.tra</td>\n.+m. sv.tek.+>(.+)</a>#i',$response,$r);
                 $r[1] = iconv("ISO-8859-2","UTF-8",$r[1]);
                 $return['data'] = $r[1];
                 $this->cache->save( $this->name.$this->action.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
@@ -231,6 +231,146 @@ class ApiPresenter extends BasePresenter {
     }
     
     
+    public function actionTV($id,$kdy) {
+        
+        $data = $this->getEPGTV();
+        $data = array_change_key_case($data, CASE_LOWER);
+        $return = array( 'data' => array() );
+        $id = strtolower($id);
+
+        switch ($id) {
+            case 'vse':
+
+                switch ($kdy) {
+
+                    case 'nyní':
+                    case 'nyni':
+                        foreach ($data as $nazev => $stanice) {
+                            foreach ($stanice as $program) {
+                                if ($program['zacatek']->getTimestamp() <= time() && $program['konec']->getTimestamp() >= time()) {
+                                    if (!isset($return['data'][$nazev])) {
+                                        $return['data'][$nazev] = array();
+                                    }
+                                    $program['zacatek-full'] = $program['zacatek']->format("d.m.Y H:i");
+                                    $program['konec-full'] = $program['konec']->format("d.m.Y H:i");
+                                    $program['zacatek'] = $program['zacatek']->format("H:i");
+                                    $program['konec'] = $program['konec']->format("H:i");
+                                    $return['data'][$nazev][] = $program;
+                                }
+                                continue;
+                            }
+                        }
+                    break;
+
+                    //default:
+                    //    break;
+                } //switch end
+                break;
+            
+            case NULL:
+            case 'seznam-stanic':
+                
+                foreach ($data as $nazev => $stanice) {
+                    $return['data'][$nazev] = $this->link("//this", array(
+                        'id' => urlencode($nazev),
+                        'kdy' => 'nyni'
+                    ));
+                }
+                
+                break;
+
+            default:
+
+                if (!isset($data[$id])) {
+                    $return['message'] = "Stanice {$id} neexistuje v seznamu televizí";
+                    $this->sendResponse(new \Nette\Application\Responses\JsonResponse($return, "application/json;charset=utf-8"));
+                }
+
+                switch ($kdy) {
+
+                    case NULL:
+                    case 'nyní':
+                    case 'nyni':
+
+                        foreach ($data[$id] as $program) {
+                            if ($program['zacatek']->getTimestamp() <= time() && $program['konec']->getTimestamp() >= time()) {
+                                $program['zacatek-full'] = $program['zacatek']->format("d.m.Y H:i");
+                                $program['konec-full'] = $program['konec']->format("d.m.Y H:i");
+                                $program['zacatek'] = $program['zacatek']->format("H:i");
+                                $program['konec'] = $program['konec']->format("H:i");
+                                $program['stanice'] = $id;
+                                $return['data'] = $program;
+                            }
+                            continue;
+                        }
+
+                        break;
+                }
+
+                break;
+        }
+
+        $this->sendResponse( new \Nette\Application\Responses\JsonResponse($return, "application/json;charset=utf-8" ) );
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    public function getEPGTV(){
+        
+        $epg = $this->cache->load( 'TVPRG'.date('d.m.y') );
+        if ( $epg !== NULL ) {
+            //$this->cache->save( 'TVXML'.date('d.m.y'), $xml );
+            return $epg;
+        }
+        
+        $xml = $this->tools->callCurlRequest('http://televize.sh.cvut.cz/xmltv/all.xml');
+        $tv = new \XMLTV($xml);
+        $tv = $tv->getXMLTV();
+        
+        $stanice = array();
+        foreach( $tv->channel as $chann ) {
+            $chann = (array)$chann;
+            $stanice[$chann["@attributes"]["id"]] = $chann["display-name"];
+        }
+        
+        $programmes = array();
+        foreach ((array)$tv as $k => $v) {
+            if ($k == 'programme') {
+                foreach ($v as $p) {
+                    $p = (array)$p;
+                    $channelCode = isset($stanice[$p["@attributes"]['channel']]) ? $stanice[$p["@attributes"]['channel']] : $p["@attributes"]['channel'];
+                    
+                    if (!isset($programmes[$channelCode])) {
+                        $programmes[$channelCode] = array();
+                    }
+                    
+                    $p = (array) $p;
+                    $data = array(
+                        'program' => (string)$p['title'],
+                        'popis' => (string) (@$p['sub-title'].@$p['desc']),
+                        'zacatek' => \DateTime::createFromFormat("YmdHis T",(string)$p["@attributes"]['start']),
+                        'konec' => \DateTime::createFromFormat("YmdHis T",(string)$p["@attributes"]['stop']),
+                        //'popis' => $p['desc'],
+                    );
+                    $programmes[ $channelCode ][] = $data;
+                }
+                break;
+            }
+        }
+        $this->cache->save( 'TVPRG'.date('d.m.y'), $programmes );
+        return $programmes;
+    }
     
     
     

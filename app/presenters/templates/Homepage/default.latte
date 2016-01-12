@@ -1,2 +1,29 @@
-{contentType text/plain} 
+{contentType text/plain;charset=utf-8} 
 pLBOT API {$version|number: 2}
+Metody:
+
+* Svátky
+    {$presenter->link("Api:svatky")}    #Výpis svátku predevčírem / včera / dnes / zítra
+    {$presenter->link("Api:svatky",array('id' => 'dnes'))}    #Výpis svátku dnes
+    {$presenter->link("Api:svatky",array('id' => 'zitra'))}    #Výpis svátku zitra
+
+
+* Počasí
+    {$presenter->link("Api:pocasi")}    #Výpis počasí dnes / zítra / pozítří
+    {$presenter->link("Api:pocasi",array('id' => 'dnes'))}    #Výpis počasí dnes
+    {$presenter->link("Api:pocasi",array('id' => 'zitra'))}    #Výpis počasí zítra
+    {$presenter->link("Api:pocasi",array('id' => 'pozitri'))}    #Výpis počasí pozítří
+
+
+* Horoskop
+    {$presenter->link("Api:horoskop", array('id' => 'lev'))}    #Výpis horoskopu pro znamení lev
+    {$presenter->link("Api:horoskop", array('id' => 'štír'))}    #Výpis horoskopu pro znamení šťír (urlencode parametru s diakritikou)
+    {$presenter->link("Api:horoskop", array('id' => 'stir'))}    #Výpis horoskopu pro znamení šťír (parametr bez diakritiky)
+    ...
+
+    
+* TV stanice
+    {$presenter->link("Api:tv")}    #Výpis stanic
+    {$presenter->link("Api:tv",array('id'=>'vse') )}    #Výpis vsech dostupných programů a jejich aktuálního programu
+    {$presenter->link("Api:tv",array('id'=>'nova') )}   #Výpis aktuálního programu na TV NOVA
+    ...
