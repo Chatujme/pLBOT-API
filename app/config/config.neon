@@ -20,3 +20,4 @@ session:
 
 services:
 	router: App\RouterFactory::createRouter
+	tools: LuRy\Tools\Tools
