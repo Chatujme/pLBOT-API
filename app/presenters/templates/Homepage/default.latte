@@ -1,5 +1,6 @@
 {contentType text/plain;charset=utf-8} 
 pLBOT API {$version|number: 2}
+
 Metody:
 
 * Svátky
@@ -9,11 +10,26 @@ Metody:
 
 
 * Počasí
+    ** Defaultne pro Prahu **
     {$presenter->link("Api:pocasi")}    #Výpis počasí dnes / zítra / pozítří
     {$presenter->link("Api:pocasi",array('id' => 'dnes'))}    #Výpis počasí dnes
     {$presenter->link("Api:pocasi",array('id' => 'zitra'))}    #Výpis počasí zítra
     {$presenter->link("Api:pocasi",array('id' => 'pozitri'))}    #Výpis počasí pozítří
+    
+    ** Pro město Brno **
+    {$presenter->link("Api:pocasi", array('mesto' =>'brno'))}    #Výpis počasí dnes / zítra / pozítří
+    {$presenter->link("Api:pocasi",array('id' => 'dnes', 'mesto' =>'brno'))}    #Výpis počasí dnes pro Brno
+    {$presenter->link("Api:pocasi",array('id' => 'zitra', 'mesto' =>'brno'))}    #Výpis počasí zítra pro Brno
+    {$presenter->link("Api:pocasi",array('id' => 'pozitri', 'mesto' =>'brno'))}    #Výpis počasí pozítří pro Brno
 
+    ** Pro město Plzeň **
+    {$presenter->link("Api:pocasi", array('mesto' =>'plzen'))}    #Výpis počasí dnes / zítra / pozítří (parametr bez diakritiky)
+    {$presenter->link("Api:pocasi", array('mesto' =>'Plzeň'))}    #Výpis počasí dnes / zítra / pozítří (urlencode parametru s diakritikou)
+    {$presenter->link("Api:pocasi",array('id' => 'dnes', 'mesto' =>'Plzen'))}    #Výpis počasí dnes pro Brno
+    {$presenter->link("Api:pocasi",array('id' => 'zitra', 'mesto' =>'Plzen'))}    #Výpis počasí zítra pro Brno
+    {$presenter->link("Api:pocasi",array('id' => 'pozitri', 'mesto' =>'Plzen'))}    #Výpis počasí pozítří pro Brno
+    
+    ...
 
 * Horoskop
     {$presenter->link("Api:horoskop", array('id' => 'lev'))}    #Výpis horoskopu pro znamení lev
