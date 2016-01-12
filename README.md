@@ -12,6 +12,7 @@ Metody:
 
 
 * Počasí
+
     ** Defaultne pro Prahu **
 
     - <apiurl>/pocasi    #Výpis počasí dnes / zítra / pozítří
