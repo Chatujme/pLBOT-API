@@ -27,7 +27,7 @@ Metody:
     - `<apiurl>/pocasi/zitra?mesto=brno`    #Výpis počasí zítra pro Brno
     - `<apiurl>/pocasi/pozitri?mesto=brno`    #Výpis počasí pozítří pro Brno
 
-     *Pro město Plzeň*
+    *Pro město Plzeň*
     
     - `<apiurl>/pocasi?mesto=plzen`    #Výpis počasí dnes / zítra / pozítří (parametr bez diakritiky)
     - `<apiurl>/pocasi?mesto=Plze%C5%88`    #Výpis počasí dnes / zítra / pozítří (urlencode parametru s diakritikou)
