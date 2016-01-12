@@ -243,6 +243,7 @@ class ApiPresenter extends BasePresenter {
 
                 switch ($kdy) {
 
+                    case NULL:
                     case 'nyní':
                     case 'nyni':
                         foreach ($data as $nazev => $stanice) {
