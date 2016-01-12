@@ -9,6 +9,7 @@ class ApiPresenter extends BasePresenter {
     
     const URL_SVATKY = 'http://svatky.pavucina.com/svatek-vcera-dnes-zitra.html';
     const URL_POCASI = 'http://pocasi.seznam.cz/%s';
+    const URL_HOROSKOPY = 'http://www.horoskopy.cz/%s';
     
     protected function startup() {
         parent::startup();
@@ -20,14 +21,14 @@ class ApiPresenter extends BasePresenter {
     }
     
     public function actionSvatky($id) {
-        $response = $this->tools->callCurlRequest(static::URL_SVATKY);
         $return = array();
         
-        $cached = $this->cache->load( $this->name.date('d.m.Y').$id );
+        $cached = $this->cache->load( $this->name.$this->action.date('d.m.Y').$id );
         if ( $cached !== NULL ) {
             $this->sendResponse( new \Nette\Application\Responses\JsonResponse($cached, "application/json;charset=utf-8" ) );
             return;
         }
+        $response = $this->tools->callCurlRequest(static::URL_SVATKY);
         
         switch ( $id ) {
             case "přerevčírem":
@@ -35,7 +36,7 @@ class ApiPresenter extends BasePresenter {
                 preg_match('#<td class="td-vdz">P.edev..rem</td>\n.+m. sv.tek.+>(.+)</a>#i',$response,$r);
                 $r[1] = iconv("ISO-8859-2","UTF-8",$r[1]);
                 $return['data'] = $r[1];
-                $this->cache->save( $this->name.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
+                $this->cache->save( $this->name.$this->action.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
                 break;
 
             case "včera":
@@ -43,14 +44,14 @@ class ApiPresenter extends BasePresenter {
                 preg_match('#<td class="td-vdz">P.edev..rem</td>\n.+m. sv.tek.+>(.+)</a>#i',$response,$r);
                 $r[1] = iconv("ISO-8859-2","UTF-8",$r[1]);
                 $return['data'] = $r[1];
-                $this->cache->save( $this->name.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
+                $this->cache->save( $this->name.$this->action.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
                 break;
 
             case "dnes":
                 preg_match('#<td class="td-vdz">Dnes</td>\n.+m. sv.tek.+>(.+)</a>#i',$response,$r);
                 $r[1] = iconv("ISO-8859-2","UTF-8",$r[1]);
                 $return['data'] = $r[1];
-                $this->cache->save( $this->name.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
+                $this->cache->save( $this->name.$this->action.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
                 break;
             
             case "zítra":
@@ -58,7 +59,7 @@ class ApiPresenter extends BasePresenter {
                 preg_match('#<td class="td-vdz">Z.itra</td>\n.+m. sv.tek.+>(.+)</a>#i',$response,$r);
                 $r[1] = iconv("ISO-8859-2","UTF-8",$r[1]);
                 $return['data'] = $r[1];
-                $this->cache->save( $this->name.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
+                $this->cache->save( $this->name.$this->action.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
                 break;
             default:
                 $id = NULL;
@@ -78,7 +79,7 @@ class ApiPresenter extends BasePresenter {
                 preg_match('#<td class="td-vdz">Z.tra</td>\n.+m. sv.tek.+>(.+)</a>#i',$response,$r);
                 $r[1] = iconv("ISO-8859-2","UTF-8",$r[1]);
                 $return['data']['zitra'] = $r[1];
-                $this->cache->save( $this->name.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
+                $this->cache->save( $this->name.$this->action.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
         }
         
         $this->sendResponse( new \Nette\Application\Responses\JsonResponse($return, "application/json;charset=utf-8" ) );
@@ -92,10 +93,9 @@ class ApiPresenter extends BasePresenter {
         } else {
             $mesto = \Nette\Utils\Strings::webalize($mesto);
         }
-        $response = $this->tools->callCurlRequest(sprintf( static::URL_POCASI, $mesto ));
         $return = array( 'data' => array() );
         
-        $cached = $this->cache->load( $this->name.$mesto.date('d.m.Y').$id );
+        $cached = $this->cache->load( $this->name.$this->action.$mesto.date('d.m.Y').$id );
         if ( $cached !== NULL ) {
             if ( $rec === FALSE ) {
                 $this->sendResponse( new \Nette\Application\Responses\JsonResponse($cached, "application/json;charset=utf-8" ) );
@@ -104,6 +104,7 @@ class ApiPresenter extends BasePresenter {
                 return $cached;
             }
         }
+        $response = $this->tools->callCurlRequest(sprintf( static::URL_POCASI, $mesto ));
         
         switch ( $id ) {
             case 'dnes':
@@ -123,7 +124,7 @@ class ApiPresenter extends BasePresenter {
                 $return['data']['noc'] = html_entity_decode("{$r3[1][3]}{$r3[2][3]}");
                 $return['data']['pro'] = "Pro {$title[1]}";
                 
-                $this->cache->save( $this->name.$mesto.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
+                $this->cache->save( $this->name.$this->action.$mesto.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
                 break;
             
             case 'zitra':
@@ -140,7 +141,7 @@ class ApiPresenter extends BasePresenter {
                 $return['data']['noc'] = html_entity_decode("{$r2[3]}{$r2[4]}");
                 $return['data']['pro'] = "Pro {$title[1]}";
 
-                $this->cache->save( $this->name.$mesto.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
+                $this->cache->save( $this->name.$this->action.$mesto.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
                 break;
             
             case 'pozitri':
@@ -158,7 +159,7 @@ class ApiPresenter extends BasePresenter {
                 $return['data']['noc'] = html_entity_decode("{$r2[3]}{$r2[4]}");
                 $return['data']['pro'] = "Pro {$title[1]}";
 
-                $this->cache->save( $this->name.$mesto.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
+                $this->cache->save( $this->name.$this->action.$mesto.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
                 break;
             
             default:
@@ -173,7 +174,7 @@ class ApiPresenter extends BasePresenter {
                     'zitra' => $zitra,
                     'pozitri' => $pozitri
                 );
-                $this->cache->save( $this->name.$mesto.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
+                $this->cache->save( $this->name.$this->action.$mesto.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
                 break;
             
             
@@ -185,33 +186,80 @@ class ApiPresenter extends BasePresenter {
         }
     }
     
+
     
-    
-    public function actionFunkce($id) {
-        $response = $this->tools->callCurlRequest(static::URL_POCASI);
+    public function actionHoroskop($id) {
         $return = array();
+        if ( $id === NULL ) {
+            $this->sendResponse( new \Nette\Application\Responses\JsonResponse(array('message' => 'Neni zadano znameni'), "application/json;charset=utf-8" ) );
+            return;
+        } else {
+            $id = \Nette\Utils\Strings::webalize($id);
+        }
         
-        $cached = $this->cache->load( $this->name.date('d.m.Y').$id );
+        $cached = null;//$this->cache->load( $this->name.$this->action.date('d.m.Y').$id );
         if ( $cached !== NULL ) {
             $this->sendResponse( new \Nette\Application\Responses\JsonResponse($cached, "application/json;charset=utf-8" ) );
             return;
         }
+        $response = $this->tools->callCurlRequest(sprintf(static::URL_HOROSKOPY, $id));
+        $match = preg_match("#<h1>(.*?)</h1>.*?<div.*?date\">(.*?)</div>.*?<h2>(.*?)</h2>.*?<p>\s*(.*?)\s*</p>.*?<div.*?>(.*?)</div>.*?<p>(.*?)</p>.*?<div.*?>(.*?)</div>.*?<p>(.*?)</p>.*?<div.*?>(.*?)</div>.*?<p>(.*?)</p>.*?<div.*?>(.*?)</div>.*?<p>(.*?)</p>.*?<div.*?>(.*?)</div>.*?<p>(.*?)</p>#i", $response, $r1);
+
+        if ($match) {
+            $return['data'] = array(
+                'znameni' => $r1[1],
+                'datum' => trim($r1[2]),
+                'horoskop' => $r1[4],
+                'laska-a-pratelstvi' => $r1[6],
+                'penize-a-prace' => $r1[8],
+                'rodina-a-vztahy' => $r1[10],
+                'zdravi-a-kondice' => $r1[12],
+                'vhodne-aktivity-na-dnes' => $r1[14],
+            );
+        } else {
+            $return['data'] = array(
+                'message' => "Failed to load {$this->action} for {$id}"
+            );
+        }
+
+        if ($match) {
+            $this->cache->save($this->name . $this->action . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
+        }
+
+
+        $this->sendResponse( new \Nette\Application\Responses\JsonResponse($return, "application/json;charset=utf-8" ) );
+    }
+    
+    
+    
+    
+    
+    //DEMO
+    public function actionFunkce($id) {
+        $return = array();
+        
+        $cached = $this->cache->load( $this->name.$this->action.date('d.m.Y').$id );
+        if ( $cached !== NULL ) {
+            $this->sendResponse( new \Nette\Application\Responses\JsonResponse($cached, "application/json;charset=utf-8" ) );
+            return;
+        }
+        $response = $this->tools->callCurlRequest(static::URL_POCASI);
         
         switch ( $id ) {
             case 'dnes':
                 
-                $this->cache->save( $this->name.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
+                $this->cache->save( $this->name.$this->action.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
                 break;
             
             case 'zitra':
                 
-                $this->cache->save( $this->name.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
+                $this->cache->save( $this->name.$this->action.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
                 break;
             
             default:
                 $id = NULL;
                 
-                $this->cache->save( $this->name.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
+                $this->cache->save( $this->name.$this->action.date('d.m.Y').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+1 day" ));
                 break;
             
             
