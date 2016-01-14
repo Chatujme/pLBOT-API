@@ -236,6 +236,7 @@ class ApiPresenter extends BasePresenter {
         $data = $this->getEPGTV();
         $data = array_change_key_case($data, CASE_LOWER);
         $return = array( 'data' => array() );
+        $id = str_replace(" ","-",$id);
         $id = strtolower($id);
 
         switch ($id) {
@@ -247,6 +248,7 @@ class ApiPresenter extends BasePresenter {
                     case 'nyní':
                     case 'nyni':
                         foreach ($data as $nazev => $stanice) {
+                            $nazev = str_replace(" ","-",$nazev);
                             foreach ($stanice as $program) {
                                 if ($program['zacatek']->getTimestamp() <= time() && $program['konec']->getTimestamp() >= time()) {
                                     if (!isset($return['data'][$nazev])) {
@@ -272,6 +274,7 @@ class ApiPresenter extends BasePresenter {
             case 'seznam-stanic':
                 
                 foreach ($data as $nazev => $stanice) {
+                    $nazev = str_replace(" ","-",$nazev);
                     $return['data'][$nazev] = $this->link("//this", array(
                         'id' => urlencode($nazev),
                         'kdy' => 'nyni'
