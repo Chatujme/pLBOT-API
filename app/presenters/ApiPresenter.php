@@ -34,6 +34,13 @@ class ApiPresenter extends BasePresenter {
         }
 
         $response = $this->tools->callCurlRequest(sprintf(static::URL_MISTNOST, $id));
+        if ( preg_match("#>Redirect<#",$response,$r )) {
+            $return['data'] = array(
+                'message' => "Místnost {$id} mebyla nalezena",
+                'code' => 404
+            );
+            $this->sendResponse(new \Nette\Application\Responses\JsonResponse($return, "application/json;charset=utf-8"));
+        }
 
         preg_match('#<td>Popis</td>\s*<td>(.*?)</td>#im', $response, $r);
         $return['data']['popis'] = $r[1];
