@@ -10,6 +10,7 @@ class ApiPresenter extends BasePresenter {
     const URL_SVATKY = 'http://svatky.pavucina.com/svatek-vcera-dnes-zitra.html';
     const URL_POCASI = 'http://pocasi.seznam.cz/%s';
     const URL_HOROSKOPY = 'http://www.horoskopy.cz/%s';
+    const URL_MISTNOST = 'http://chat.chatujme.cz/room-info?room_id=%s';
     
     protected function startup() {
         parent::startup();
@@ -19,6 +20,56 @@ class ApiPresenter extends BasePresenter {
         parent::beforeRender();
         $this->terminate();
     }
+    
+    public function actionMistnost($id) {
+        $return = array( 'data' => array());
+        
+        $cached = $this->cache->load( $this->name.$this->action.date('d.m.Y H:i').$id );
+        if ( $cached !== NULL ) {
+            $cached['cached'] = true;
+            $this->sendResponse( new \Nette\Application\Responses\JsonResponse($cached, "application/json;charset=utf-8" ) );
+            return;
+        }
+
+          $response = $this->tools->callCurlRequest(sprintf( static::URL_MISTNOST, $id ));
+
+          preg_match('#<td>Popis</td>\s*<td>(.*?)</td>#im',$response,$r);
+          $return['data']['popis'] = $r[1]; 
+          preg_match('#Místnost: <strong>(.+)\s*<br>#im',$response,$r);
+          $return['data']['mistnost'] = $r[1];  
+          preg_match('#<td>Stálý správce</td>\s*\s*<td>(.*?)</td>#im',str_replace("\n","",$response),$r);
+          preg_match_all('#<a target="_blank" href="http://profil.chatujme.cz/(.*?)">#', $r[1], $r2);
+          $return['data']['ss'] = $r2[1]; 
+          preg_match('#<td>Celkový čas místnosti</td>\s*<td>(.+) hod</td>#im',$response,$r);
+          $return['data']['celkovy-cas'] = str_replace(",","",$r[1]);   
+          preg_match_all('#<td class="activeDay">(.+)</td>#im',$response,$r);
+          $return['data']['aktualni-den'] = $r[1][0];
+          $return['data']['aktualne-prochatovano'] = $r[1][1]; 
+        
+          $return['data']['limit'] = array('mistnost-limit' => FALSE);
+          $return['data']['web'] = '';
+          
+          if ( preg_match("#<td>Web místnosti</td>.*?href=\"([^\"]*)\"#im",str_replace("\n","",$response), $r) ) {
+            $return['data']['web'] = $r[1];
+          }
+
+          if ( preg_match("#<td>Kategorie :</td>.*?<strong>\(.+glyphicon\-(ok|warning)\-sign.*?limit (\d+) hod.*?</strong></td>#i", str_replace("\n","",$response), $r) ) {
+            $limit = array();
+            $limit['mistnost-limit'] = true;  
+            $limit['splneny-limit'] = $r[1] == 'warning' ? FALSE : TRUE;  
+            $limit['limit-hodin'] = $r[2];
+            $return['data']['limit'] = $limit;  
+          }
+          \Tracy\Debugger::$maxLen = 1000;
+          
+          preg_match("#<td>Založeno</td>.*?strong>\s\|\s([^\(]*)\s\(#im",str_replace("\n","",$response), $r);
+          $return['data']['zalozeno'] = $r[1];
+        
+          $this->cache->save( $this->name.$this->action.date('d.m.Y H:i').$id , $return, array( \Nette\Caching\Cache::EXPIRE => "+5 minutes" ));
+          $this->sendResponse( new \Nette\Application\Responses\JsonResponse($return, "application/json;charset=utf-8" ) );        
+      
+    
+     }
     
     public function actionSvatky($id) {
         $return = array();
