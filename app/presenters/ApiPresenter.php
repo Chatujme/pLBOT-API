@@ -169,15 +169,36 @@ class ApiPresenter extends BasePresenter {
                 preg_match('#<div id="predpoved-dnes".+<div class="info">\s*<p>\s*([^<]+)</p>(.+)id="predpoved-zitra"#i', $response, $r);
                 preg_match('#<span class="date">(.*?)</span>#i', $r[0], $date);
                 preg_match('#temp.*?value">([^<]*).*?sup">([^<]*)</span>.*?<span class=#i', $r[2], $r2);
-                preg_match_all('#temp">(\d+).*?sup">([^<]*)</span>.*?dayTime">\s*([^<]*)\s*</span>\s*</div>#im', $r[2], $r3);
+                preg_match_all('#temp">([\d-]+).*?sup">([^<]*)</span>.*?dayTime">\s*([^<]*)\s*</span>\s*</div>#im', $r[2], $r3);
                 \Tracy\Debugger::$maxLen = 10000;
                 $return['data']['datum'] = "{$date[1]}";
                 $return['data']['predpoved'] = html_entity_decode($r[1]);
                 $return['data']['nyni'] = html_entity_decode("{$r2[1]}{$r2[2]}");
-                $return['data']['rano'] = html_entity_decode("{$r3[1][0]}{$r3[2][0]}");
-                $return['data']['odpoledne'] = html_entity_decode("{$r3[1][1]}{$r3[2][1]}");
-                $return['data']['vecer'] = html_entity_decode("{$r3[1][2]}{$r3[2][2]}");
-                $return['data']['noc'] = html_entity_decode("{$r3[1][3]}{$r3[2][3]}");
+                
+                $return['data']['rano'] = '?? °C';
+                $return['data']['odpoledne'] = '?? °C';
+                $return['data']['vecer'] = '?? °C';
+                $return['data']['noc'] = '?? °C';
+                
+                foreach ( $r3[3] as $key => $doba ) {
+                    
+                    switch ( $doba ) {
+                        case 'Ráno':
+                            $return['data']['rano'] = html_entity_decode("{$r3[1][$key]}{$r3[2][$key]}");
+                            break;
+                        case 'Odpoledne':
+                            $return['data']['odpoledne'] = html_entity_decode("{$r3[1][$key]}{$r3[2][$key]}");
+                            break;
+                        case 'Večer':
+                            $return['data']['vecer'] = html_entity_decode("{$r3[1][$key]}{$r3[2][$key]}");
+                            break;
+                        case 'V Noci':
+                            $return['data']['noc'] = html_entity_decode("{$r3[1][$key]}{$r3[2][$key]}");
+                            break;
+                    }
+                    
+                }
+                
                 $return['data']['pro'] = "Pro {$title[1]}";
 
                 $this->cache->save($this->name . $this->action . $mesto . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
