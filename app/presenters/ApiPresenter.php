@@ -334,7 +334,17 @@ class ApiPresenter extends BasePresenter {
                                 }
                                 continue;
                             }
-                        }
+                            $program = array();
+                            if ( !isset($return['data'][$nazev]) ) {
+                                $return['data'][$nazev] = array();
+                                $program['program'] = '??';
+                                $program['zacatek-full'] = '??';
+                                $program['konec-full'] = '??';
+                                $program['zacatek'] = '??';
+                                $program['konec'] = '??';
+                                $return['data'][$nazev][] = $program;
+                            }                        
+                        } 
                         break;
 
                     //default:
@@ -391,7 +401,7 @@ class ApiPresenter extends BasePresenter {
 
     public function getEPGTV() {
 
-        $epg = $this->cache->load('TVPRG' . date('d.m.y'));
+        $epg = $this->cache->load('TVPRG' . date('d.m.y H'));
         if ($epg !== NULL) {
             //$this->cache->save( 'TVXML'.date('d.m.y'), $xml );
             return $epg;
@@ -406,7 +416,6 @@ class ApiPresenter extends BasePresenter {
             $chann = (array) $chann;
             $stanice[$chann["@attributes"]["id"]] = $chann["display-name"];
         }
-
         $programmes = array();
         foreach ((array) $tv as $k => $v) {
             if ($k == 'programme') {
@@ -431,7 +440,7 @@ class ApiPresenter extends BasePresenter {
                 break;
             }
         }
-        $this->cache->save('TVPRG' . date('d.m.y'), $programmes);
+        $this->cache->save('TVPRG' . date('d.m.y H'), $programmes);
         return $programmes;
     }
 
