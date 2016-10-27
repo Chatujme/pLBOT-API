@@ -92,6 +92,9 @@ class ApiPresenter extends BasePresenter {
             case "přerevčírem":
             case "predevcirem":
                 preg_match('#<td class="td-vdz">P.edev..rem</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                if ( !count($r) ) {
+                    preg_match('#<td class="td-vdz">P.edev..rem</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
+                }
                 $r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
                 $return['data'] = $r[1];
                 $this->cache->save($this->name . $this->action . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
@@ -99,7 +102,10 @@ class ApiPresenter extends BasePresenter {
 
             case "včera":
             case "vcera":
-                preg_match('#<td class="td-vdz">P.edev..rem</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                preg_match('#<td class="td-vdz">V.era</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                if ( !count($r) ) {
+                    preg_match('#<td class="td-vdz">V.era</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
+                }
                 $r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
                 $return['data'] = $r[1];
                 $this->cache->save($this->name . $this->action . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
@@ -107,6 +113,9 @@ class ApiPresenter extends BasePresenter {
 
             case "dnes":
                 preg_match('#<td class="td-vdz">Dnes</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                if ( !count($r) ) {
+                    preg_match('#<td class="td-vdz">Dnes</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
+                }
                 $r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
                 $return['data'] = $r[1];
                 $this->cache->save($this->name . $this->action . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
@@ -115,6 +124,9 @@ class ApiPresenter extends BasePresenter {
             case "zítra":
             case "zitra":
                 preg_match('#<td class="td-vdz">Z.tra</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                if ( !count($r) ) {
+                    preg_match('#<td class="td-vdz">Z.tra</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
+                }
                 $r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
                 $return['data'] = $r[1];
                 $this->cache->save($this->name . $this->action . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
@@ -123,18 +135,30 @@ class ApiPresenter extends BasePresenter {
                 $id = NULL;
                 $return['data'] = array();
                 preg_match('#<td class="td-vdz">P.edev..rem</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                if ( !count($r) ) {
+                    preg_match('#<td class="td-vdz">P.edev..rem</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
+                }
                 $r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
                 $return['data']['predevcirem'] = $r[1];
-
-                preg_match('#<td class="td-vdz">Dnes</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                
+                preg_match('#<td class="td-vdz">V.era</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                if ( !count($r) ) {
+                    preg_match('#<td class="td-vdz">V.era</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
+                }
                 $r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
                 $return['data']['vcera'] = $r[1];
 
                 preg_match('#<td class="td-vdz">Dnes</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                if ( !count($r) ) {
+                    preg_match('#<td class="td-vdz">Dnes</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
+                }
                 $r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
                 $return['data']['dnes'] = $r[1];
 
                 preg_match('#<td class="td-vdz">Z.tra</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                if ( !count($r) ) {
+                    preg_match('#<td class="td-vdz">Z.tra</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
+                }
                 $r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
                 $return['data']['zitra'] = $r[1];
                 $this->cache->save($this->name . $this->action . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
