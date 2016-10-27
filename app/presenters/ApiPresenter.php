@@ -10,9 +10,9 @@ namespace App\Presenters;
 class ApiPresenter extends BasePresenter {
 
     const URL_SVATKY = 'http://svatky.pavucina.com/svatek-vcera-dnes-zitra.html';
-    const URL_POCASI = 'http://pocasi.seznam.cz/%s';
-    const URL_HOROSKOPY = 'http://www.horoskopy.cz/%s';
-    const URL_MISTNOST = 'http://chat.chatujme.cz/room-info?room_id=%s';
+    const URL_POCASI = 'https://pocasi.seznam.cz/%s';
+    const URL_HOROSKOPY = 'https://www.horoskopy.cz/%s';
+    const URL_MISTNOST = 'https://chat.chatujme.cz/room-info?room_id=%s';
 
     protected function startup() {
         parent::startup();
