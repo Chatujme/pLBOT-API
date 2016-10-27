@@ -1,8 +1,9 @@
 {
-	"name": "nette/web-project",
-	"description": "Nette: Standard Web Project",
+	"name": "chatujme/plbot-api",
+	"description": "API functions for pLBOT",
 	"type": "project",
 	"license": ["MIT", "BSD-3-Clause", "GPL-2.0", "GPL-3.0"],
+  "minimum-stability": "dev",
 	"require": {
 		"php": ">= 5.4.0",
 		"nette/application": "^2.3.6",
@@ -28,5 +29,10 @@
   "repositories": [{
           "type": "vcs",
           "url": "ssh://git@git.mvyvoj.cz:2202/lury/lury-tools.git"
-      }]
+      },
+      {
+        	"type": "vcs",
+        	"url": "https://github.com/academe/sugarrestapi"
+      }
+    ]
 }
