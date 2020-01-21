@@ -9,8 +9,8 @@ namespace App\Presenters;
  */
 class ApiPresenter extends BasePresenter {
 
-    const URL_SVATKY = 'http://svatky.pavucina.com/svatek-vcera-dnes-zitra.html';
-    const URL_POCASI = 'https://pocasi.seznam.cz/%s';
+    const URL_SVATKY = 'https://svatky.pavucina.com/svatek-vcera-dnes-zitra.html';
+    const URL_POCASI = 'https://pocasi-backend.centrum.cz/api/v2/widget/welcome/%s';
     const URL_HOROSKOPY = 'https://www.horoskopy.cz/%s';
     const URL_MISTNOST = 'http://chat.chatujme.cz/room-info?room_id=%s';
 
@@ -86,80 +86,81 @@ class ApiPresenter extends BasePresenter {
             $this->sendResponse(new \Nette\Application\Responses\JsonResponse($cached, "application/json;charset=utf-8"));
             return;
         }
+        //$response = str_replace(["\n", "\r"], "", $this->tools->callCurlRequest(static::URL_SVATKY));
         $response = $this->tools->callCurlRequest(static::URL_SVATKY);
 
         switch ($id) {
             case "přerevčírem":
             case "predevcirem":
-                preg_match('#<td class="td-vdz">P.edev..rem</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                preg_match('#<td class="td-vdz">P.edev..rem</td>\n.+má svátek.+>(.+)</a>#i', $response, $r);
                 if ( !count($r) ) {
                     preg_match('#<td class="td-vdz">P.edev..rem</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
                 }
-                $r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
+                //$r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
                 $return['data'] = $r[1];
                 $this->cache->save($this->name . $this->action . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
                 break;
 
             case "včera":
             case "vcera":
-                preg_match('#<td class="td-vdz">V.era</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                preg_match('#<td class="td-vdz">V.era</td>\n.+má svátek.+>(.+)</a>#i', $response, $r);
                 if ( !count($r) ) {
                     preg_match('#<td class="td-vdz">V.era</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
                 }
-                $r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
+                //$r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
                 $return['data'] = $r[1];
                 $this->cache->save($this->name . $this->action . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
                 break;
 
             case "dnes":
-                preg_match('#<td class="td-vdz">Dnes</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                preg_match('#<td class="td-vdz">Dnes</td>\n.+má svátek.+>(.+)</a>#i', $response, $r);
                 if ( !count($r) ) {
                     preg_match('#<td class="td-vdz">Dnes</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
                 }
-                $r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
+                //$r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
                 $return['data'] = $r[1];
                 $this->cache->save($this->name . $this->action . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
                 break;
 
             case "zítra":
             case "zitra":
-                preg_match('#<td class="td-vdz">Z.tra</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                preg_match('#<td class="td-vdz">Z.tra</td>\n.+má svátek.+>(.+)</a>#i', $response, $r);
                 if ( !count($r) ) {
                     preg_match('#<td class="td-vdz">Z.tra</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
                 }
-                $r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
+                //$r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
                 $return['data'] = $r[1];
                 $this->cache->save($this->name . $this->action . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
                 break;
             default:
                 $id = NULL;
                 $return['data'] = array();
-                preg_match('#<td class="td-vdz">P.edev..rem</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                preg_match('#<td class="td-vdz">Předevčírem</td>\n.+má svátek.+>(.+)</a>#uim', $response, $r);
                 if ( !count($r) ) {
                     preg_match('#<td class="td-vdz">P.edev..rem</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
                 }
-                $r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
+                //$r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
                 $return['data']['predevcirem'] = $r[1];
                 
-                preg_match('#<td class="td-vdz">V.era</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                preg_match('#<td class="td-vdz">Včera</td>\n.+má svátek.+>(.+)</a>#i', $response, $r);
                 if ( !count($r) ) {
-                    preg_match('#<td class="td-vdz">V.era</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
+                    preg_match('#<td class="td-vdz">Včera</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
                 }
-                $r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
+                //$r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
                 $return['data']['vcera'] = $r[1];
 
-                preg_match('#<td class="td-vdz">Dnes</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                preg_match('#<th>Dnes</th>\n.+má svátek.+>(.+)</a>#i', $response, $r);
                 if ( !count($r) ) {
-                    preg_match('#<td class="td-vdz">Dnes</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
+                    preg_match('#<th>Dnes</th>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
                 }
-                $r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
+                //$r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
                 $return['data']['dnes'] = $r[1];
 
-                preg_match('#<td class="td-vdz">Z.tra</td>\n.+m. sv.tek.+>(.+)</a>#i', $response, $r);
+                preg_match('#<td class="td-vdz">Zítra</td>\n.+má svátek.+>(.+)</a>#i', $response, $r);
                 if ( !count($r) ) {
-                    preg_match('#<td class="td-vdz">Z.tra</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
+                    preg_match('#<td class="td-vdz">Zítra</td>\n.+<td\s*class="td-jmeno">([^<]*)</td>#i', $response, $r);
                 }
-                $r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
+                //$r[1] = iconv("ISO-8859-2", "UTF-8", $r[1]);
                 $return['data']['zitra'] = $r[1];
                 $this->cache->save($this->name . $this->action . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
         }
@@ -184,83 +185,19 @@ class ApiPresenter extends BasePresenter {
                 return $cached;
             }
         }
-        $response = $this->tools->callCurlRequest(sprintf(static::URL_POCASI, $mesto));
+        $response = \Nette\Utils\ArrayHash::from(json_decode($this->tools->callCurlRequest(sprintf(static::URL_POCASI, $mesto))), true);
 
         switch ($id) {
             case 'dnes':
-
-                preg_match('#<span id="title-loc">(.*?)</span>#i', $response, $title);
-                preg_match('#<div id="predpoved-dnes".+<div class="info">\s*<p>\s*([^<]+)</p>(.+)id="predpoved-zitra"#i', $response, $r);
-                preg_match('#<span class="date">(.*?)</span>#i', $r[0], $date);
-                preg_match('#temp.*?value">([^<]*).*?sup">([^<]*)</span>.*?<span class=#i', $r[2], $r2);
-                preg_match_all('#temp">([\d-]+).*?sup">([^<]*)</span>.*?dayTime">\s*([^<]*)\s*</span>\s*</div>#im', $r[2], $r3);
-                \Tracy\Debugger::$maxLen = 10000;
-                $return['data']['datum'] = "{$date[1]}";
-                $return['data']['predpoved'] = html_entity_decode($r[1]);
-                $return['data']['nyni'] = html_entity_decode("{$r2[1]}{$r2[2]}");
-                
-                $return['data']['rano'] = '?? °C';
-                $return['data']['odpoledne'] = '?? °C';
-                $return['data']['vecer'] = '?? °C';
-                $return['data']['noc'] = '?? °C';
-                
-                foreach ( $r3[3] as $key => $doba ) {
-                    
-                    switch ( $doba ) {
-                        case 'Ráno':
-                            $return['data']['rano'] = html_entity_decode("{$r3[1][$key]}{$r3[2][$key]}");
-                            break;
-                        case 'Odpoledne':
-                            $return['data']['odpoledne'] = html_entity_decode("{$r3[1][$key]}{$r3[2][$key]}");
-                            break;
-                        case 'Večer':
-                            $return['data']['vecer'] = html_entity_decode("{$r3[1][$key]}{$r3[2][$key]}");
-                            break;
-                        case 'V Noci':
-                            $return['data']['noc'] = html_entity_decode("{$r3[1][$key]}{$r3[2][$key]}");
-                            break;
-                    }
-                    
-                }
-                
-                $return['data']['pro'] = "Pro {$title[1]}";
-
-                $this->cache->save($this->name . $this->action . $mesto . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
+                $data = $response['long_term_forecast']->forecasts[0];
                 break;
 
             case 'zitra':
-
-                preg_match('#<span id="title-loc">(.*?)</span>#i', $response, $title);
-                preg_match('#<div id="predpoved-zitra".+<div class="info">\s*<p>\s*([^<]+)</p>(.+)id="predpoved-pozitri"#i', $response, $r);
-                preg_match('#<span class="date">(.*?)</span>#i', $r[0], $date);
-                preg_match('#atDay.*?temp.*?value">([-\d]+).*?sup">([^<]+)</span>.*?atNight.*?temp.*?value">([-\d]+).*?sup">([^<]+)</span>#i', $r[0], $r2);
-                \Tracy\Debugger::$maxLen = 10000;
-
-                $return['data']['datum'] = "{$date[1]}";
-                $return['data']['predpoved'] = html_entity_decode($r[1]);
-                $return['data']['den'] = html_entity_decode("{$r2[1]}{$r2[2]}");
-                $return['data']['noc'] = html_entity_decode("{$r2[3]}{$r2[4]}");
-                $return['data']['pro'] = "Pro {$title[1]}";
-
-                $this->cache->save($this->name . $this->action . $mesto . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
+                $data = $response['long_term_forecast']->forecasts[1];
                 break;
 
             case 'pozitri':
-
-                preg_match('#<span id="title-loc">(.*?)</span>#i', $response, $title);
-                preg_match('#<div id="predpoved-pozitri".*?<div class="info">\s*<p>\s*([^<]+)</p>(.*?)id="predpoved-(.*?)"#i', $response, $r);
-                preg_match('#<span class="date">(.*?)</span>#i', $r[0], $date);
-                //preg_match( '#atDay.*?temp.*?value">(\d+).*?sup">([^<]+)</span>.*?atNight.*?temp.*?value">(\d+).*?sup">([^<]+)</span>#i', $r[0], $r2 );
-                preg_match('#atDay.*?temp.*?value">([-\d]+).*?sup">([^<]+)</span>.*?atNight.*?temp.*?value">([-\d]+).*?sup">([^<]+)</span>#i', $r[0], $r2);
-                \Tracy\Debugger::$maxLen = 10000;
-
-                $return['data']['datum'] = "{$date[1]}";
-                $return['data']['predpoved'] = html_entity_decode($r[1]);
-                $return['data']['den'] = html_entity_decode("{$r2[1]}{$r2[2]}");
-                $return['data']['noc'] = html_entity_decode("{$r2[3]}{$r2[4]}");
-                $return['data']['pro'] = "Pro {$title[1]}";
-
-                $this->cache->save($this->name . $this->action . $mesto . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
+                $data = $response['long_term_forecast']->forecasts[2];
                 break;
 
             default:
@@ -278,6 +215,21 @@ class ApiPresenter extends BasePresenter {
                 $this->cache->save($this->name . $this->action . $mesto . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
                 break;
         }
+
+        if ( $id !== NULL ) {
+            $return['data']['datum'] = $data->date;
+            $return['data']['predpoved'] = $data->day_forecast;
+            $return['data']['nyni'] = $response->welcome[0]->actual->temp;
+            
+            $return['data']['den'] = $data->temp_day;
+            $return['data']['noc'] = $data->temp_night;
+            
+            $return['data']['pro'] = "Pro {$response->welcome[0]->place->city}";
+    
+            $this->cache->save($this->name . $this->action . $mesto . date('d.m.Y') . $id, $return, array(\Nette\Caching\Cache::EXPIRE => "+1 day"));
+        }
+
+
         if ($rec === false) {
             $this->sendResponse(new \Nette\Application\Responses\JsonResponse($return, "application/json;charset=utf-8"));
         } else {
@@ -344,7 +296,7 @@ class ApiPresenter extends BasePresenter {
                     case 'nyní':
                     case 'nyni':
                         foreach ($data as $nazev => $stanice) {
-                            $nazev = str_replace(" ", "-", $nazev);
+                            //$nazev = strtolower(str_replace(" ", "-", iconv("UTF-8", "ASCII//TRANSLIT", $nazev)));
                             foreach ($stanice as $program) {
                                 if ($program['zacatek']->getTimestamp() <= time() && $program['konec']->getTimestamp() >= time()) {
                                     if (!isset($return['data'][$nazev])) {
@@ -425,21 +377,62 @@ class ApiPresenter extends BasePresenter {
 
     public function getEPGTV() {
 
+        $displayChannelName = [
+            "ctd" => "ČT : D", 
+            "plus" => "Plus",
+            "radiozurnal" => "Radiožurnál",
+            "jazz" => "Jazz",
+            "dvojka" => "Dvojka",
+            "ct1" => "ČT1",
+            "vltava" => "Vltava",
+            "ct2" => "ČT2",
+            "wave" => "Wave",
+            "ct24" => "ČT24",
+            "dur" => "Dur",
+            "ct4" => "ČT SPORT",
+            "junior" => "Junior",
+            "novacinema" => "Nova Cinema",
+            "primacool" => "Prima Cool",
+            "nova" => "TV Nova",
+            "primafamily" => "Prima",
+            "tvbarrandov" => "TV Barrandov",
+            "780.dvb.guide" => "Prima Love",
+            "1026.dvb.guide" => "1026.dvb.guide",
+            "6914.dvb.guide" => "Televize Seznam",
+            "proglas" => "Proglas",
+            "788.dvb.guide" => "Prima Krimi",
+            "2053.dvb.guide" => "Kino Barrandov",
+            "primazoom" => "Prima Zoom",
+            "slagrtv" => "Šlágr TV",
+            "2052.dvb.guide" => "Barrandov Krimi",
+            "779.dvb.guide" => "Prima Max",
+            "ocko" => "Óčko",
+            "2562.dvb.guide" => "JOJ Family",
+            "pohoda" => "Pohoda",
+            "telka" => "Telka",
+            "fanda" => "Fanda",
+            "2818.dvb.guide" => "Rebel",
+            "smichov" => "Smíchov",
+            "801.dvb.guide" => "Prima Comedy Central"
+        ];
+
         $epg = $this->cache->load('TVPRG' . date('d.m.y H'));
         if ($epg !== NULL) {
             //$this->cache->save( 'TVXML'.date('d.m.y'), $xml );
-            return $epg;
+            //return $epg;
         }
 
-        $xml = $this->tools->callCurlRequest('http://televize.sh.cvut.cz/xmltv/all.xml');
+        $xml = $this->tools->callCurlRequest('http://xmltv.tvpc.cz/xmltv.xml');
         $tv = new \XMLTV($xml);
         $tv = $tv->getXMLTV();
 
         $stanice = array();
-        foreach ($tv->channel as $chann) {
+        foreach ($tv->programme as $chann) {
             $chann = (array) $chann;
-            $stanice[$chann["@attributes"]["id"]] = $chann["display-name"];
+            $stanice[$chann["@attributes"]["channel"]] = isset($displayChannelName[$chann["@attributes"]["channel"]]) ? $displayChannelName[$chann["@attributes"]["channel"]] : $chann["@attributes"]["channel"];
+            $stanice[$chann["@attributes"]["channel"]] = strtolower(str_replace(" ", "-", iconv("UTF-8", "ASCII//TRANSLIT", $stanice[$chann["@attributes"]["channel"]])));
         }
+
         $programmes = array();
         foreach ((array) $tv as $k => $v) {
             if ($k == 'programme') {
@@ -447,11 +440,15 @@ class ApiPresenter extends BasePresenter {
                     $p = (array) $p;
                     $channelCode = isset($stanice[$p["@attributes"]['channel']]) ? $stanice[$p["@attributes"]['channel']] : $p["@attributes"]['channel'];
 
+
                     if (!isset($programmes[$channelCode])) {
                         $programmes[$channelCode] = array();
                     }
 
                     $p = (array) $p;
+                    if ( is_array($p['title']) ){
+                        $p['title'] = $p['title'][0];
+                    }
                     $data = array(
                         'program' => (string) $p['title'],
                         'popis' => (string) (@$p['sub-title'] . @$p['desc']),
@@ -459,6 +456,7 @@ class ApiPresenter extends BasePresenter {
                         'konec' => \DateTime::createFromFormat("YmdHis T", (string) $p["@attributes"]['stop']),
                             //'popis' => $p['desc'],
                     );
+                    
                     $programmes[$channelCode][] = $data;
                 }
                 break;
