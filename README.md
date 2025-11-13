@@ -1,52 +1,139 @@
-# pLBOT-API
-Api pro získávání dat pro IRC bota pLBOT
+# pLBOT-API v2.0
 
-pLBOT API 1.00
+🚀 Modernizované REST API pro IRC bota pLBOT
 
-Metody:
+[![PHP Version](https://img.shields.io/badge/PHP-8.4+-blue.svg)](https://php.net)
+[![Nette](https://img.shields.io/badge/Nette-3.x%2F4.x-green.svg)](https://nette.org)
+[![Apitte](https://img.shields.io/badge/Apitte-0.8-orange.svg)](https://contributte.org/apitte/)
 
-* Svátky
-    - `<apiurl>/svatky`    #Výpis svátku predevčírem / včera / dnes / zítra
-    - `<apiurl>/svatky/dnes`    #Výpis svátku dnes
-    - `<apiurl>/svatky/zitra`    #Výpis svátku zitra
+---
 
+## 🔥 Co je nového ve verzi 2.0
 
-* Počasí
+- ✅ **PHP 8.4** s full type safety
+- ✅ **Apitte/Contributte** REST API framework
+- ✅ **PHP 8 Attributes** místo anotací
+- ✅ **OpenAPI** dokumentace
+- ✅ **Service Layer** architektura
+- ✅ **DOMDocument** parsery (robustnější než regex)
+- ✅ **Dependency Injection**
+- ✅ **CORS support**
 
-    *Defaultne pro Prahu*
+---
 
-    - `<apiurl>/pocasi`    #Výpis počasí dnes / zítra / pozítří
-    - `<apiurl>/pocasi/dnes`    #Výpis počasí dnes
-    - `<apiurl>/pocasi/zitra`    #Výpis počasí zítra
-    - `<apiurl>/pocasi/pozitri`    #Výpis počasí pozítří
-    
-    *Pro město Brno*
-    
-    - `<apiurl>/pocasi?mesto=brno`    #Výpis počasí dnes / zítra / pozítří
-    - `<apiurl>/pocasi/dnes?mesto=brno`    #Výpis počasí dnes pro Brno
-    - `<apiurl>/pocasi/zitra?mesto=brno`    #Výpis počasí zítra pro Brno
-    - `<apiurl>/pocasi/pozitri?mesto=brno`    #Výpis počasí pozítří pro Brno
+## 📦 Instalace
 
-    *Pro město Plzeň*
-    
-    - `<apiurl>/pocasi?mesto=plzen`    #Výpis počasí dnes / zítra / pozítří (parametr bez diakritiky)
-    - `<apiurl>/pocasi?mesto=Plze%C5%88`    #Výpis počasí dnes / zítra / pozítří (urlencode parametru s diakritikou)
-    - `<apiurl>/pocasi/dnes?mesto=Plzen`    #Výpis počasí dnes pro Brno
-    - `<apiurl>/pocasi/zitra?mesto=Plzen`    #Výpis počasí zítra pro Brno
-    - `<apiurl>/pocasi/pozitri?mesto=Plzen`    #Výpis počasí pozítří pro Brno
-    - ...
+```bash
+composer install
+```
 
-* Horoskop
-    - `<apiurl>/horoskop/lev`    #Výpis horoskopu pro znamení lev
-    - `<apiurl>/horoskop/%C5%A1t%C3%ADr`    #Výpis horoskopu pro znamení šťír (urlencode parametru s diakritikou)
-    - `<apiurl>/horoskop/stir`    #Výpis horoskopu pro znamení šťír (parametr bez diakritiky)
-    ...
+**Požadavky:**
+- PHP >= 8.4
+- Apache s mod_rewrite
+- Extensions: curl, json, dom, libxml, simplexml
 
-    
-* TV stanice
-    - `<apiurl>/tv`    #Výpis stanic
-    - `<apiurl>/tv/vse`    #Výpis vsech dostupných programů a jejich aktuálního programu
-    - `<apiurl>/tv/nova`   #Výpis aktuálního programu na TV NOVA
-    - ...
+---
 
+## 📚 Dokumentace
 
+Kompletní API dokumentace: **[docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md)**
+
+Analýza datových zdrojů: **[docs/DATA_SOURCES_ANALYSIS.md](docs/DATA_SOURCES_ANALYSIS.md)**
+
+---
+
+## 🌐 API Endpointy (Quick Start)
+
+### Svátky
+```bash
+GET /svatky           # Všechny dny
+GET /svatky/dnes      # Dnešní svátek
+GET /svatky/zitra     # Zítřejší svátek
+```
+
+### Počasí
+```bash
+GET /pocasi                    # Pro Prahu (všechny dny)
+GET /pocasi/dnes               # Dnes pro Prahu
+GET /pocasi?mesto=brno         # Pro Brno
+GET /pocasi/zitra?mesto=plzen  # Zítra pro Plzeň
+```
+
+### Horoskopy
+```bash
+GET /horoskop/lev      # Horoskop pro lva
+GET /horoskop/stir     # Podporuje i bez diakritiky
+GET /horoskop/vodnář   # I s diakritikou
+```
+
+### TV Program
+```bash
+GET /tv           # Seznam stanic
+GET /tv/vse       # Aktuální program všech stanic
+GET /tv/nova      # Aktuální program TV Nova
+GET /tv/ct1       # Aktuální program ČT1
+```
+
+### Místnost (Chatujme.cz)
+```bash
+GET /mistnost/{id}    # Info o místnosti
+```
+
+---
+
+## 🏗️ Architektura
+
+```
+app/
+├── Controllers/     # API Controllers (Apitte)
+│   ├── BaseController.php
+│   ├── SvatkyController.php
+│   ├── PocasiController.php
+│   ├── HoroskopyController.php
+│   ├── TvController.php
+│   └── MistnostController.php
+├── Services/        # Business Logic
+│   ├── HttpClientService.php
+│   ├── SvatkyService.php
+│   ├── PocasiService.php
+│   ├── HoroskopyService.php
+│   ├── TvProgramService.php
+│   └── MistnostService.php
+└── model/
+    └── xmltv.php    # Modernizovaný XMLTV parser
+```
+
+**Design Patterns:**
+- Service Layer Pattern
+- Dependency Injection
+- Repository Pattern (HttpClientService)
+
+---
+
+## 📝 Changelog
+
+### v2.0.0 (2025-11-13)
+- Kompletní refaktor na PHP 8.4
+- Migrace na Apitte REST API framework
+- PHP 8 attributes místo anotací
+- Service layer architektura
+- DOMDocument parsery místo regex
+- OpenAPI dokumentace
+- Type safety (strict types everywhere)
+
+### v1.0.0
+- Původní verze (PHP 5.4, Nette 2.3)
+
+---
+
+## 📧 Kontakt
+
+- **Autor**: LuRy <lury@lury.cz>
+- **Refaktoring v2.0**: pLBOT-API Team
+- **Repository**: [GitHub](https://github.com/Chatujme/pLBOT-API)
+
+---
+
+## 📄 Licence
+
+MIT, BSD-3-Clause, GPL-2.0, GPL-3.0
