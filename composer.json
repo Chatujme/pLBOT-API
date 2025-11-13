@@ -3,36 +3,51 @@
 	"description": "API functions for pLBOT",
 	"type": "project",
 	"license": ["MIT", "BSD-3-Clause", "GPL-2.0", "GPL-3.0"],
-  "minimum-stability": "dev",
+	"minimum-stability": "stable",
 	"require": {
-		"php": ">= 5.4.0",
-		"nette/application": "^2.3.14",
-		"nette/bootstrap": "^2.3",
-		"nette/caching": "^2.3",
-		"nette/database": "^2.3",
-		"nette/di": "^2.3",
-		"nette/finder": "^2.3",
-		"nette/forms": "^2.3",
-		"nette/http": "^2.3",
-		"nette/mail": "^2.3",
-		"nette/robot-loader": "^2.3",
-		"nette/safe-stream": "^2.3",
-		"nette/security": "^2.3",
-		"nette/utils": "^2.3",
-		"latte/latte": "^2.3",
-		"tracy/tracy": "^2.3",
-    "lury/lury-tools": "dev-master"
+		"php": ">=8.4",
+		"nette/application": "^3.2",
+		"nette/bootstrap": "^3.2",
+		"nette/caching": "^3.3",
+		"nette/database": "^3.2",
+		"nette/di": "^3.2",
+		"nette/finder": "^3.0",
+		"nette/forms": "^3.2",
+		"nette/http": "^3.3",
+		"nette/mail": "^4.0",
+		"nette/robot-loader": "^4.0",
+		"nette/safe-stream": "^3.0",
+		"nette/security": "^3.2",
+		"nette/utils": "^4.0",
+		"latte/latte": "^3.0",
+		"tracy/tracy": "^2.10",
+		"lury/lury-tools": "dev-master",
+		"ext-dom": "*",
+		"ext-libxml": "*",
+		"ext-simplexml": "*",
+		"ext-curl": "*",
+		"ext-json": "*",
+		"apitte/core": "^0.8",
+		"apitte/middlewares": "^0.8",
+		"apitte/openapi": "^0.8",
+		"contributte/psr7-http-message": "^0.9"
 	},
 	"require-dev": {
-		"nette/tester": "^1.6"
+		"nette/tester": "^2.5",
+		"phpstan/phpstan": "^1.10"
 	},
-  "repositories": [{
-          "type": "vcs",
-          "url": "ssh://git@git.mvyvoj.cz:2202/lury/lury-tools.git"
-      },
-      {
-        	"type": "vcs",
-        	"url": "https://github.com/academe/sugarrestapi"
-      }
-    ]
+	"repositories": [{
+		"type": "vcs",
+		"url": "ssh://git@git.mvyvoj.cz:2202/lury/lury-tools.git"
+	},
+	{
+		"type": "vcs",
+		"url": "https://github.com/academe/sugarrestapi"
+	}
+	],
+	"autoload": {
+		"psr-4": {
+			"App\\": "app/"
+		}
+	}
 }
