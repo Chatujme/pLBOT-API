@@ -1,151 +1,213 @@
 <?php
 
+declare(strict_types=1);
+
+use SimpleXMLElement;
+
 /**
- * XMLTV
- *   XML Parser, following Object-Oriented getter/setter style
- *   NOTES for rolling back jQuery to Plain-Old-JavaScript:  
- *   1. replace .find() with xmlDoc.getElementsByTagName("...")    NOTE: getElementsByTagName will not work well with XML namespaces
- *   2. replace .children() with [n] (i.e. xmlDoc.getElementsByTagName("item")[0] for the first item in list of XML elements)
- *   3. replace .attr() with .getAttribute() for non-jquery javascript parsing
- *   4. replace .text() with .childNodes[0].nodeValue
- * @author bcmoney
- * @param xml snippet of XML or XML Object
- * @return data String 
+ * XMLTV Parser - modernizovaná verze pro PHP 8.4
+ *
+ * @author bcmoney (original)
+ * @author pLBOT-API (refactored)
  */
-class XMLTV {
+final class XMLTV
+{
+    private ?SimpleXMLElement $epg = null;
 
-    var $epg;
+    public function __construct(string $xml)
+    {
+        // Zjistíme, zda je to URL nebo XML string
+        $isUrl = (bool) preg_match('|^https?://[a-z0-9\-]+(\.[a-z0-9\-]+)*(:[0-9]+)?(/.*)?$|i', $xml);
 
-    function __construct($xml) {
-        $schedule = ( preg_match('|^http(s)?://[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$|i', $xml) ) ? simplexml_load_file($xml) : simplexml_load_string($xml);
-        $this->epg = $schedule;
+        try {
+            $schedule = $isUrl ? simplexml_load_file($xml) : simplexml_load_string($xml);
+
+            if ($schedule === false) {
+                throw new \RuntimeException('Failed to parse XML');
+            }
+
+            $this->epg = $schedule;
+        } catch (\Exception $e) {
+            throw new \RuntimeException("Failed to load XMLTV data: {$e->getMessage()}", 0, $e);
+        }
     }
 
-    /* Performs the SOAP request to get the data */
-
-    function getEPG() {
-        
-    }
-
-    //<xmltv> (root)
-    function getXMLTV() {
+    /**
+     * Získá root XMLTV element
+     */
+    public function getXMLTV(): ?SimpleXMLElement
+    {
         return $this->epg;
     }
 
-    //<tv>
-    function getTV($xmltv) {
-        return $xmltv->tv;
+    /**
+     * Získá TV element
+     */
+    public function getTV(SimpleXMLElement $xmltv): ?SimpleXMLElement
+    {
+        return $xmltv->tv ?? null;
     }
 
-    // @generator-info-name
-    function getGeneratorInfoName($tv) {
-        return $tv["generator-info-name"];
+    /**
+     * Získá název generátoru
+     */
+    public function getGeneratorInfoName(SimpleXMLElement $tv): string
+    {
+        return (string) ($tv['generator-info-name'] ?? '');
     }
 
-    //	<channel>
-    function getChannel($tv) {
-        return $tv->channel;
+    /**
+     * Získá kanály
+     */
+    public function getChannel(SimpleXMLElement $tv): ?SimpleXMLElement
+    {
+        return $tv->channel ?? null;
     }
 
-    //	@id
-    function getChannelID($channel) {
-        return $channel["id"];
+    /**
+     * Získá ID kanálu
+     */
+    public function getChannelID(SimpleXMLElement $channel): string
+    {
+        return (string) ($channel['id'] ?? '');
     }
 
-    //	  <icon>
-    function getChannelIcon($channel) {
-        return $channel->icon["src"];
+    /**
+     * Získá ikonu kanálu
+     */
+    public function getChannelIcon(SimpleXMLElement $channel): string
+    {
+        return (string) ($channel->icon['src'] ?? '');
     }
 
-    //	  <url>
-    function getChannelURL($channel) {
-        return $channel->url;
+    /**
+     * Získá URL kanálu
+     */
+    public function getChannelURL(SimpleXMLElement $channel): string
+    {
+        return (string) ($channel->url ?? '');
     }
 
-    //	  <display-name>
-    function getChannelDisplayName($channel, $language) {
-        $i18n = (!empty($language)) ? $language : "en";
-        return $channel["display-name"][$i18n];
+    /**
+     * Získá zobrazované jméno kanálu
+     */
+    public function getChannelDisplayName(SimpleXMLElement $channel, string $language = 'en'): string
+    {
+        $i18n = !empty($language) ? $language : 'en';
+        return (string) ($channel['display-name'][$i18n] ?? '');
     }
 
-    //  <programme>
-    function getProgramme($tv) {
-        return $tv->programme;
+    /**
+     * Získá programy
+     */
+    public function getProgramme(SimpleXMLElement $tv): ?SimpleXMLElement
+    {
+        return $tv->programme ?? null;
     }
 
-    //  @start
-    function getProgrammeStart($programme) {
-        return $programme["start"];
+    /**
+     * Získá začátek programu
+     */
+    public function getProgrammeStart(SimpleXMLElement $programme): string
+    {
+        return (string) ($programme['start'] ?? '');
     }
 
-    //  @stop
-    function getProgrammeStop($programme) {
-        return $programme["stop"];
+    /**
+     * Získá konec programu
+     */
+    public function getProgrammeStop(SimpleXMLElement $programme): string
+    {
+        return (string) ($programme['stop'] ?? '');
     }
 
-    //  @channel
-    function getProgrammeChannel($programme) {
-        return $programme["channel"];
+    /**
+     * Získá kanál programu
+     */
+    public function getProgrammeChannel(SimpleXMLElement $programme): string
+    {
+        return (string) ($programme['channel'] ?? '');
     }
 
-    //    <title>
-    function getProgrammeTitle($programme) {
-        return $programme->title;
+    /**
+     * Získá název programu
+     */
+    public function getProgrammeTitle(SimpleXMLElement $programme): string
+    {
+        return (string) ($programme->title ?? '');
     }
 
-    //    <sub-title>
-    function getProgrammeSubTitle($programme) {
-        return $programme["sub-title"];
+    /**
+     * Získá podtitul programu
+     */
+    public function getProgrammeSubTitle(SimpleXMLElement $programme): string
+    {
+        return (string) ($programme['sub-title'] ?? '');
     }
 
-    //    <desc>
-    function getProgrammeDesc($programme) {
-        return $programme->desc;
+    /**
+     * Získá popis programu
+     */
+    public function getProgrammeDesc(SimpleXMLElement $programme): string
+    {
+        return (string) ($programme->desc ?? '');
     }
 
-    //    <date>
-    function getProgrammeDate($programme) {
-        return $programme->date;
+    /**
+     * Získá datum programu
+     */
+    public function getProgrammeDate(SimpleXMLElement $programme): string
+    {
+        return (string) ($programme->date ?? '');
     }
 
-    //    <category>
-    function getProgrammeCategory($programme) {
-        return $programme->category;
+    /**
+     * Získá kategorii programu
+     */
+    public function getProgrammeCategory(SimpleXMLElement $programme): string
+    {
+        return (string) ($programme->category ?? '');
     }
 
-    //    <episode-num  system="dd_progid"
-    function getProgrammeEpisodeID($programme) {
-        $epID = $programme["episode-num"]["system"];
-        $episodeID = '';
-        if ($epID == 'dd_progid') {
-            $episodeID = $programme["episode-num"]["system"];
-        }
-        return $episodeID;
+    /**
+     * Získá ID epizody
+     */
+    public function getProgrammeEpisodeID(SimpleXMLElement $programme): string
+    {
+        $epID = (string) ($programme['episode-num']['system'] ?? '');
+        return $epID === 'dd_progid' ? (string) $programme['episode-num']['system'] : '';
     }
 
-    //    <episode-num  system="onscreen"
-    function getProgrammeEpisodeNum($programme) {
-        $epNum = $programme["episode-num"]["system"];
-        $episodeNum = '';
-        if ($epNum == 'onscreen') {
-            $episodeID = $programme["episode-num"]["system"];
-        }
-        return $episodeNum;
+    /**
+     * Získá číslo epizody
+     */
+    public function getProgrammeEpisodeNum(SimpleXMLElement $programme): string
+    {
+        $epNum = (string) ($programme['episode-num']['system'] ?? '');
+        return $epNum === 'onscreen' ? (string) $programme['episode-num']['system'] : '';
     }
 
-    //    <audio><stereo>
-    function getProgrammeAudioStereo($programme) {
-        return $programme->audio["stereo"];
+    /**
+     * Získá audio stereo
+     */
+    public function getProgrammeAudioStereo(SimpleXMLElement $programme): string
+    {
+        return (string) ($programme->audio['stereo'] ?? '');
     }
 
-    //    <previously-shown>
-    function getProgrammePreviouslyShownStart($programme) {
-        return $programme["previously-shown"]["start"];
+    /**
+     * Získá datum předchozího vysílání
+     */
+    public function getProgrammePreviouslyShownStart(SimpleXMLElement $programme): string
+    {
+        return (string) ($programme['previously-shown']['start'] ?? '');
     }
 
-    //    <subtitles> (format for alternate languages)
-    function getProgrammeSubtitlesType($programme) {
-        return $programme->subtitles["type"];
+    /**
+     * Získá typ titulků
+     */
+    public function getProgrammeSubtitlesType(SimpleXMLElement $programme): string
+    {
+        return (string) ($programme->subtitles['type'] ?? '');
     }
-
 }

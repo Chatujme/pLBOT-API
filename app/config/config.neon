@@ -21,3 +21,41 @@ session:
 services:
 	router: App\RouterFactory::createRouter
 	tools: LuRy\Tools\Tools
+
+	# HTTP Client Service
+	- App\Services\HttpClientService
+
+	# Business Services
+	- App\Services\SvatkyService
+	- App\Services\PocasiService
+	- App\Services\HoroskopyService
+	- App\Services\TvProgramService
+	- App\Services\MistnostService
+
+	# API Controllers
+	- App\Controllers\SvatkyController
+	- App\Controllers\PocasiController
+	- App\Controllers\HoroskopyController
+	- App\Controllers\TvController
+	- App\Controllers\MistnostController
+
+extensions:
+	# Apitte extensions
+	api: Apitte\Core\DI\ApiExtension
+	middlewares: Apitte\Middlewares\DI\MiddlewaresExtension
+	openapi: Apitte\OpenApi\DI\OpenApiExtension
+
+api:
+	plugins:
+		Apitte\Core\DI\Plugin\CoreSchemaPlugin:
+		Apitte\Middlewares\DI\Plugin\CoreMiddlewaresPlugin:
+
+middlewares:
+	# Enable Tracy debug mode
+	tracy: %debugMode%
+
+openapi:
+	meta:
+		title: pLBOT API
+		version: "2.0"
+		description: "Modernizované API pro IRC bota pLBOT"
