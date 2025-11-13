@@ -10,11 +10,12 @@ use Nette\Caching\Cache;
 use Nette\Utils\Strings;
 
 /**
- * Service pro získávání informací o svátkách
+ * Service pro získávání informací o svátkách pomocí JSON API
  */
 final class SvatkyService
 {
-    private const URL_SVATKY = 'https://svatky.pavucina.com/svatek-vcera-dnes-zitra.html';
+    // Změněno z HTML parsingu na JSON API
+    private const URL_SVATKY_API = 'https://svatkyapi.cz/api/day';
     private const CACHE_EXPIRATION = '1 day';
 
     public function __construct(
@@ -24,7 +25,7 @@ final class SvatkyService
     }
 
     /**
-     * Získá svátek pro daný den
+     * Získá svátek pro daný den pomocí JSON API
      *
      * @param string|null $den Den (predevcirem, vcera, dnes, zitra) nebo null pro všechny
      * @return array{data: string|array<string, string>}
@@ -39,87 +40,55 @@ final class SvatkyService
             return $cached;
         }
 
-        $html = $this->httpClient->get(self::URL_SVATKY);
-        $result = match ($den) {
-            'predevcirem', 'předevčírem' => ['data' => $this->parseSingleDay($html, 'Předevčírem')],
-            'vcera', 'včera' => ['data' => $this->parseSingleDay($html, 'Včera')],
-            'dnes' => ['data' => $this->parseSingleDay($html, 'Dnes')],
-            'zitra', 'zítra' => ['data' => $this->parseSingleDay($html, 'Zítra')],
-            default => ['data' => $this->parseAllDays($html)],
-        };
+        try {
+            $result = match ($den) {
+                'predevcirem', 'předevčírem' => ['data' => $this->getSvatekForOffset(-2)],
+                'vcera', 'včera' => ['data' => $this->getSvatekForOffset(-1)],
+                'dnes' => ['data' => $this->getSvatekForOffset(0)],
+                'zitra', 'zítra' => ['data' => $this->getSvatekForOffset(1)],
+                default => ['data' => [
+                    'predevcirem' => $this->getSvatekForOffset(-2),
+                    'vcera' => $this->getSvatekForOffset(-1),
+                    'dnes' => $this->getSvatekForOffset(0),
+                    'zitra' => $this->getSvatekForOffset(1),
+                ]],
+            };
 
-        $this->cache->save($cacheKey, $result, [
-            Cache::EXPIRE => self::CACHE_EXPIRATION,
-        ]);
+            $this->cache->save($cacheKey, $result, [
+                Cache::EXPIRE => self::CACHE_EXPIRATION,
+            ]);
 
-        return $result;
+            return $result;
+        } catch (\Exception $e) {
+            throw new \RuntimeException("Nepodařilo se získat data o svátkách: {$e->getMessage()}", 0, $e);
+        }
     }
 
     /**
-     * Parsuje jméno pro jeden konkrétní den
+     * Získá svátek pro den s daným offsetem od dneška
      */
-    private function parseSingleDay(string $html, string $dayLabel): string
+    private function getSvatekForOffset(int $dayOffset): string
     {
-        $dom = new DOMDocument();
-        @$dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
-        $xpath = new DOMXPath($dom);
+        $date = new \DateTime();
+        if ($dayOffset !== 0) {
+            $date->modify("{$dayOffset} days");
+        }
+        $dateStr = $date->format('Y-m-d'); // Format: YYYY-MM-DD
 
-        // Hledáme td s textem dne a pak následující td s jménem
-        $query = "//td[contains(text(), '{$dayLabel}')]/following-sibling::td[1]";
-        $nodes = $xpath->query($query);
+        $url = self::URL_SVATKY_API . '/' . $dateStr;
 
-        if ($nodes && $nodes->length > 0) {
-            $content = trim($nodes->item(0)->textContent);
-            // Pokud je jméno v odkazu
-            if (empty($content)) {
-                $linkQuery = "//td[contains(text(), '{$dayLabel}')]/following-sibling::td[1]//a";
-                $linkNodes = $xpath->query($linkQuery);
-                if ($linkNodes && $linkNodes->length > 0) {
-                    $content = trim($linkNodes->item(0)->textContent);
-                }
+        try {
+            $data = $this->httpClient->getJson($url);
+
+            if (isset($data['name']) && !empty($data['name'])) {
+                return $data['name'];
             }
-            return $content ?: 'Neznámý';
+
+            return 'Neznámý';
+        } catch (\Exception $e) {
+            // Fallback - vrátíme chybu nebo prázdnou hodnotu
+            return 'N/A';
         }
-
-        // Fallback na regex pokud DOM parser selže
-        return $this->parseSingleDayRegex($html, $dayLabel);
-    }
-
-    /**
-     * Fallback regex parser pro jeden den
-     */
-    private function parseSingleDayRegex(string $html, string $dayLabel): string
-    {
-        // Normalizujeme label (. může být nebo nemusí být v HTML)
-        $pattern = '#<td[^>]*>' . preg_quote($dayLabel, '#') . '</td>\s*<td[^>]*>(?:<a[^>]*>)?([^<]+)#i';
-
-        if (preg_match($pattern, $html, $matches)) {
-            return trim($matches[1]);
-        }
-
-        // Alternativní pattern s diakritikou escapovanou
-        $altPattern = '#<td[^>]*>P.edev..rem|V.era|Dnes|Z.tra</td>\s*.*?(?:<a[^>]*>)?([^<]+?)(?:</a>)?</td>#i';
-
-        if (preg_match($altPattern, $html, $matches)) {
-            return trim($matches[1]);
-        }
-
-        return 'Neznámý';
-    }
-
-    /**
-     * Parsuje všechny dny najednou
-     *
-     * @return array<string, string>
-     */
-    private function parseAllDays(string $html): array
-    {
-        return [
-            'predevcirem' => $this->parseSingleDay($html, 'Předevčírem'),
-            'vcera' => $this->parseSingleDay($html, 'Včera'),
-            'dnes' => $this->parseSingleDay($html, 'Dnes'),
-            'zitra' => $this->parseSingleDay($html, 'Zítra'),
-        ];
     }
 
     private function getCacheKey(?string $den): string
