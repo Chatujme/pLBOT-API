@@ -13,7 +13,7 @@ use Nette\Utils\Strings;
 final class PocasiService
 {
     private const URL_POCASI = 'https://pocasi-backend.centrum.cz/api/v2/widget/welcome/%s';
-    private const CACHE_EXPIRATION = '1 day';
+    private const CACHE_EXPIRATION = '2 hours'; // Počasí se aktualizuje častěji
     private const DEFAULT_CITY = 'praha';
 
     public function __construct(

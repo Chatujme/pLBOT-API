@@ -18,6 +18,9 @@
 - ✅ **DOMDocument** parsery (robustnější než regex)
 - ✅ **Dependency Injection**
 - ✅ **CORS support**
+- ✅ **22+ API Endpoints** (rozšíření z 6 na 22+)
+- ✅ **Rate Limiting** (100 req/min per IP)
+- ✅ **17 nových API** (Joke, Crypto, Countries, ISS, RUIAN, Zásilkovna a další)
 
 ---
 
@@ -38,20 +41,24 @@ composer install
 
 Kompletní API dokumentace: **[docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md)**
 
+Nová API v2.0: **[docs/NEW_APIS.md](docs/NEW_APIS.md)**
+
 Analýza datových zdrojů: **[docs/DATA_SOURCES_ANALYSIS.md](docs/DATA_SOURCES_ANALYSIS.md)**
 
 ---
 
-## 🌐 API Endpointy (Quick Start)
+## 🌐 API Endpointy (22+ APIs)
 
-### Svátky
+### 🇨🇿 České API (8 endpoints)
+
+#### Svátky
 ```bash
 GET /svatky           # Všechny dny
 GET /svatky/dnes      # Dnešní svátek
 GET /svatky/zitra     # Zítřejší svátek
 ```
 
-### Počasí
+#### Počasí
 ```bash
 GET /pocasi                    # Pro Prahu (všechny dny)
 GET /pocasi/dnes               # Dnes pro Prahu
@@ -59,14 +66,14 @@ GET /pocasi?mesto=brno         # Pro Brno
 GET /pocasi/zitra?mesto=plzen  # Zítra pro Plzeň
 ```
 
-### Horoskopy
+#### Horoskopy
 ```bash
 GET /horoskop/lev      # Horoskop pro lva
 GET /horoskop/stir     # Podporuje i bez diakritiky
 GET /horoskop/vodnář   # I s diakritikou
 ```
 
-### TV Program
+#### TV Program
 ```bash
 GET /tv           # Seznam stanic
 GET /tv/vse       # Aktuální program všech stanic
@@ -74,10 +81,111 @@ GET /tv/nova      # Aktuální program TV Nova
 GET /tv/ct1       # Aktuální program ČT1
 ```
 
-### Místnost (Chatujme.cz)
+#### Místnost (Chatujme.cz)
 ```bash
 GET /mistnost/{id}    # Info o místnosti
 ```
+
+#### ČNB Kurzy
+```bash
+GET /cnb/kurzy              # Všechny kurzy měn
+GET /cnb/kurzy/USD          # Kurz dolaru
+GET /cnb/prevod?amount=100&from=USD&to=CZK  # Převod měn
+```
+
+#### RUIAN - Registr adres
+```bash
+GET /ruian/obce?nazev=Praha           # Vyhledání obcí
+GET /ruian/ulice?nazev=Karlova        # Vyhledání ulic
+GET /ruian/adresy?query=Karlova       # Vyhledání adres
+GET /ruian/validate?ulice=Karlova&cislo=1&obec=Praha  # Validace adresy
+```
+
+#### Zásilkovna
+```bash
+GET /zasilkovna/track/Z123456789      # Sledování balíku
+```
+
+---
+
+### 🎉 Fun APIs (8 endpoints)
+
+```bash
+GET /joke/                    # Náhodný vtip
+GET /joke/programming         # Programátorský vtip
+GET /catfact/                 # Zajímavost o kočkách
+GET /dog/                     # Obrázek psa
+GET /dog/?breed=husky         # Obrázek konkrétního plemene
+GET /advice/                  # Životní rada
+GET /quotes/                  # Inspirativní citát
+GET /chucknorris/             # Chuck Norris vtip
+GET /bored/                   # Nápad na aktivitu
+GET /fox/                     # Obrázek lišky
+```
+
+---
+
+### 📊 Data APIs (5 endpoints)
+
+```bash
+GET /crypto/price/bitcoin              # Cena kryptoměny
+GET /crypto/popular?currency=czk       # Populární kryptoměny
+GET /countries/CZ                      # Informace o zemi
+GET /countries/region/europe           # Země v regionu
+GET /numbers/42                        # Zajímavost o čísle
+GET /numbers/today                     # Historický fakt o dnešku
+GET /iss/position                      # Poloha ISS
+GET /iss/astronauts                    # Astronauti ve vesmíru
+GET /trivia/                           # Trivia otázky
+```
+
+---
+
+### 🔧 Utility APIs (1 endpoint)
+
+```bash
+GET /uuid/                    # Vygenerování UUID
+GET /uuid/?count=5            # 5 UUID najednou
+GET /uuid/validate/{uuid}     # Validace UUID
+```
+
+---
+
+## 🔒 Rate Limiting
+
+API implementuje rate limiting pro ochranu proti zneužití:
+
+- **Limit:** 100 requestů za minutu per IP adresu
+- **Headers:** Každý response obsahuje rate limit headers (`X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`)
+- **429 Error:** Při překročení limitu se vrátí HTTP 429 s informací kdy můžete zkusit znovu
+
+```bash
+# Response headers
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1699874460
+```
+
+---
+
+## 📊 API Features
+
+### Caching Strategy
+- **Czech APIs:** 1 den až 1 týden (RUIAN, ČNB)
+- **Fun APIs:** Většinou bez cache (vždy náhodné)
+- **Crypto APIs:** 5 minut (ceny se rychle mění)
+- **ISS Position:** 1 minuta (rychlý pohyb)
+- **Countries:** 1 týden (data se nemění často)
+
+### Supported Features
+- ✅ Full type safety (PHP 8.4)
+- ✅ OpenAPI documentation
+- ✅ CORS support
+- ✅ Rate limiting
+- ✅ Comprehensive error handling
+- ✅ HTTP cache headers
+- ✅ Request/Response logging
+- ✅ Service layer architecture
 
 ---
 
@@ -120,6 +228,15 @@ app/
 - DOMDocument parsery místo regex
 - OpenAPI dokumentace
 - Type safety (strict types everywhere)
+- **Přidáno 17+ nových API endpoints:**
+  - Fun APIs: Joke, Cat Facts, Dog, Advice, Quotes, Chuck Norris, Bored, Fox
+  - Data APIs: Crypto (CoinGecko), Countries, Numbers, Trivia, ISS Tracker
+  - Czech APIs: ČNB Kurzy, RUIAN, Zásilkovna
+  - Utility APIs: UUID Generator
+- Rate limiting implementace (100 req/min per IP)
+- Odebrání cache z náhodných API pro lepší user experience
+- Komplexní testy pro všechny nové API
+- Kompletní dokumentace včetně příkladů použití v IRC botu
 
 ### v1.0.0
 - Původní verze (PHP 5.4, Nette 2.3)

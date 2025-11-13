@@ -31,6 +31,27 @@ services:
 	- App\Services\HoroskopyService
 	- App\Services\TvProgramService
 	- App\Services\MistnostService
+	- App\Services\CnbKurzyService
+	- App\Services\AresService
+	- App\Services\RuianService
+	- App\Services\ZasilkovnaService
+	- App\Services\JokeService
+	- App\Services\CatFactsService
+	- App\Services\DogService
+	- App\Services\AdviceService
+	- App\Services\CryptoService
+	- App\Services\QuotesService
+	- App\Services\ChuckNorrisService
+	- App\Services\NumbersService
+	- App\Services\CountriesService
+	- App\Services\BoredService
+	- App\Services\ISSService
+	- App\Services\TriviaService
+	- App\Services\UUIDService
+	- App\Services\FoxService
+
+	# Middlewares
+	- App\Middlewares\RateLimitMiddleware
 
 	# API Controllers
 	- App\Controllers\SvatkyController
@@ -38,6 +59,24 @@ services:
 	- App\Controllers\HoroskopyController
 	- App\Controllers\TvController
 	- App\Controllers\MistnostController
+	- App\Controllers\CnbController
+	- App\Controllers\AresController
+	- App\Controllers\RuianController
+	- App\Controllers\ZasilkovnaController
+	- App\Controllers\JokeController
+	- App\Controllers\CatFactsController
+	- App\Controllers\DogController
+	- App\Controllers\AdviceController
+	- App\Controllers\CryptoController
+	- App\Controllers\QuotesController
+	- App\Controllers\ChuckNorrisController
+	- App\Controllers\NumbersController
+	- App\Controllers\CountriesController
+	- App\Controllers\BoredController
+	- App\Controllers\ISSController
+	- App\Controllers\TriviaController
+	- App\Controllers\UUIDController
+	- App\Controllers\FoxController
 
 extensions:
 	# Apitte extensions
@@ -53,6 +92,9 @@ api:
 middlewares:
 	# Enable Tracy debug mode
 	tracy: %debugMode%
+	# Rate limiting middleware
+	middlewares:
+		- App\Middlewares\RateLimitMiddleware
 
 openapi:
 	meta:
