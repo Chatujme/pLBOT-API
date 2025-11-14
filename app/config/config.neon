@@ -50,6 +50,10 @@ services:
 	- App\Services\UUIDService
 	- App\Services\FoxService
 	- App\Services\VatService
+	- App\Services\QrCodeService
+	- App\Services\UrlShortenerService
+	- App\Services\HashService
+	- App\Services\NewsRssService
 
 	# Middlewares
 	- App\Middlewares\RateLimitMiddleware
@@ -79,6 +83,10 @@ services:
 	- App\Controllers\UUIDController
 	- App\Controllers\FoxController
 	- App\Controllers\VatController
+	- App\Controllers\QrCodeController
+	- App\Controllers\UrlShortenerController
+	- App\Controllers\HashController
+	- App\Controllers\NewsRssController
 
 extensions:
 	# Apitte extensions
