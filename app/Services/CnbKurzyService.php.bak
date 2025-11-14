@@ -5,23 +5,19 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Nette\Caching\Cache;
-use Nette\Caching\Storage;
 
 /**
  * Service pro získávání kurzů měn z ČNB
  */
 final class CnbKurzyService
 {
-    private Cache $cache;
-
     private const URL_CNB_DAILY = 'https://www.cnb.cz/cs/financni_trhy/devizovy_trh/kurzy_devizoveho_trhu/denni_kurz.txt';
     private const CACHE_EXPIRATION = '12 hours'; // ČNB aktualizuje kurzy 1x denně po 14:30
 
     public function __construct(
         private readonly HttpClientService $httpClient,
-        Storage $storage
+        private readonly Cache $cache
     ) {
-        $this->cache = new Cache($storage, self::class);
     }
 
     /**

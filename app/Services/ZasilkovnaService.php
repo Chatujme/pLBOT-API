@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Nette\Caching\Cache;
+use Nette\Caching\Storage;
 
 /**
  * Service pro sledování zásilek přes Zásilkovnu (Packeta)
@@ -14,13 +15,16 @@ use Nette\Caching\Cache;
  */
 final class ZasilkovnaService
 {
+    private Cache $cache;
+
     private const URL_TRACKING_API = 'https://tracking.packeta.com/api/v1/tracking';
     private const CACHE_EXPIRATION = '1 hour'; // Stav balíků se mění relativně často
 
     public function __construct(
         private readonly HttpClientService $httpClient,
-        private readonly Cache $cache
+        Storage $storage
     ) {
+        $this->cache = new Cache($storage, self::class);
     }
 
     /**

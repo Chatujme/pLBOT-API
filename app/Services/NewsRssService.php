@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Nette\Caching\Cache;
+use Nette\Caching\Storage;
 use SimpleXMLElement;
 
 /**
@@ -12,6 +13,8 @@ use SimpleXMLElement;
  */
 final class NewsRssService
 {
+    private Cache $cache;
+
     private const CACHE_EXPIRATION = '15 minutes';
 
     /**
@@ -42,8 +45,9 @@ final class NewsRssService
 
     public function __construct(
         private readonly HttpClientService $httpClient,
-        private readonly Cache $cache
+        Storage $storage
     ) {
+        $this->cache = new Cache($storage, self::class);
     }
 
     /**

@@ -6,6 +6,7 @@ namespace App\Services;
 
 use DateTime;
 use Nette\Caching\Cache;
+use Nette\Caching\Storage;
 use Nette\Utils\Strings;
 use SimpleXMLElement;
 
@@ -14,6 +15,8 @@ use SimpleXMLElement;
  */
 final class TvProgramService
 {
+    private Cache $cache;
+
     private const URL_XMLTV = 'http://xmltv.tvpc.cz/xmltv.xml';
     private const CACHE_EXPIRATION = '1 hour';
 
@@ -57,8 +60,9 @@ final class TvProgramService
 
     public function __construct(
         private readonly HttpClientService $httpClient,
-        private readonly Cache $cache
+        Storage $storage
     ) {
+        $this->cache = new Cache($storage, self::class);
     }
 
     /**

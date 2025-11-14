@@ -7,6 +7,7 @@ namespace App\Services;
 use DOMDocument;
 use DOMXPath;
 use Nette\Caching\Cache;
+use Nette\Caching\Storage;
 use Nette\Utils\Strings;
 
 /**
@@ -14,6 +15,8 @@ use Nette\Utils\Strings;
  */
 final class HoroskopyService
 {
+    private Cache $cache;
+
     private const URL_HOROSKOPY = 'https://www.horoskopy.cz/%s';
     private const CACHE_EXPIRATION = '1 day';
 
@@ -37,8 +40,9 @@ final class HoroskopyService
 
     public function __construct(
         private readonly HttpClientService $httpClient,
-        private readonly Cache $cache
+        Storage $storage
     ) {
+        $this->cache = new Cache($storage, self::class);
     }
 
     /**

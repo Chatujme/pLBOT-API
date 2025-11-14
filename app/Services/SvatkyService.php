@@ -7,6 +7,7 @@ namespace App\Services;
 use DOMDocument;
 use DOMXPath;
 use Nette\Caching\Cache;
+use Nette\Caching\Storage;
 use Nette\Utils\Strings;
 
 /**
@@ -18,10 +19,13 @@ final class SvatkyService
     private const URL_SVATKY_API = 'https://svatkyapi.cz/api/day';
     private const CACHE_EXPIRATION = '1 day';
 
+    private Cache $cache;
+
     public function __construct(
         private readonly HttpClientService $httpClient,
-        private readonly Cache $cache
+        Storage $storage
     ) {
+        $this->cache = new Cache($storage, self::class);
     }
 
     /**

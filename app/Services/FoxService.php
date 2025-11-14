@@ -5,19 +5,23 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Nette\Caching\Cache;
+use Nette\Caching\Storage;
 
 /**
  * Service pro získávání obrázků lišek
  */
 final class FoxService
 {
+    private Cache $cache;
+
     private const URL_FOX_API = 'https://randomfox.ca/floof/';
     private const CACHE_EXPIRATION = '1 hour';
 
     public function __construct(
         private readonly HttpClientService $httpClient,
-        private readonly Cache $cache
+        Storage $storage
     ) {
+        $this->cache = new Cache($storage, self::class);
     }
 
     /**

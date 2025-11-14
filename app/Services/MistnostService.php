@@ -7,19 +7,23 @@ namespace App\Services;
 use DOMDocument;
 use DOMXPath;
 use Nette\Caching\Cache;
+use Nette\Caching\Storage;
 
 /**
  * Service pro získávání informací o místnostech z Chatujme.cz
  */
 final class MistnostService
 {
+    private Cache $cache;
+
     private const URL_MISTNOST = 'http://chat.chatujme.cz/room-info?room_id=%s';
     private const CACHE_EXPIRATION = '5 minutes';
 
     public function __construct(
         private readonly HttpClientService $httpClient,
-        private readonly Cache $cache
+        Storage $storage
     ) {
+        $this->cache = new Cache($storage, self::class);
     }
 
     /**

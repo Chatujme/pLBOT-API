@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Nette\Caching\Cache;
+use Nette\Caching\Storage;
 
 /**
  * Service pro získávání trivia otázek z Open Trivia Database
  */
 final class TriviaService
 {
+    private Cache $cache;
+
     private const URL_TRIVIA_API = 'https://opentdb.com/api.php';
     private const URL_CATEGORIES = 'https://opentdb.com/api_category.php';
     private const CACHE_EXPIRATION = '1 hour';
@@ -20,8 +23,9 @@ final class TriviaService
 
     public function __construct(
         private readonly HttpClientService $httpClient,
-        private readonly Cache $cache
+        Storage $storage
     ) {
+        $this->cache = new Cache($storage, self::class);
     }
 
     /**

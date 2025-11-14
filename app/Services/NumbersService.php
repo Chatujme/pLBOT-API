@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Nette\Caching\Cache;
+use Nette\Caching\Storage;
 
 /**
  * Service pro získávání zajímavostí o číslech z NumbersAPI
  */
 final class NumbersService
 {
+    private Cache $cache;
+
     private const URL_NUMBERS_API = 'http://numbersapi.com';
     private const CACHE_EXPIRATION = '1 day';
 
@@ -18,8 +21,9 @@ final class NumbersService
 
     public function __construct(
         private readonly HttpClientService $httpClient,
-        private readonly Cache $cache
+        Storage $storage
     ) {
+        $this->cache = new Cache($storage, self::class);
     }
 
     /**

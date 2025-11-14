@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Nette\Caching\Cache;
+use Nette\Caching\Storage;
 
 /**
  * Service pro ověřování EU VAT čísel přes VIES systém
@@ -14,6 +15,8 @@ use Nette\Caching\Cache;
  */
 final class VatService
 {
+    private Cache $cache;
+
     // VIES SOAP endpoint - oficiální EU služba
     private const VIES_WSDL = 'http://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl';
     private const CACHE_EXPIRATION = '1 day';
@@ -50,8 +53,9 @@ final class VatService
     ];
 
     public function __construct(
-        private readonly Cache $cache
+        Storage $storage
     ) {
+        $this->cache = new Cache($storage, self::class);
     }
 
     /**
