@@ -49,9 +49,11 @@ services:
 	- App\Services\HashService
 	- App\Services\NewsRssService
 	- App\Services\ImageService
+	- App\Services\StatsService
 
 	# Middlewares
 	- App\Middlewares\RateLimitMiddleware
+	- App\Middlewares\StatsMiddleware
 
 	# API Controllers
 	-
@@ -141,6 +143,9 @@ services:
 	-
 		factory: App\Controllers\ImageController
 		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\AdminController
+		tags: [apitte.core.controller]
 
 extensions:
 	# Apitte extensions (contributte/apitte ^0.12)
@@ -161,6 +166,3 @@ api:
 					title: "pLBOT API"
 					version: "2.0"
 					description: "Modernizované API pro IRC bota pLBOT"
-
-# Middlewares are configured via Apitte plugins now
-# Rate limiting middleware is registered directly in services
