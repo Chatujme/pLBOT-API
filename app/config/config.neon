@@ -49,6 +49,7 @@ services:
 	- App\Services\TriviaService
 	- App\Services\UUIDService
 	- App\Services\FoxService
+	- App\Services\VatService
 
 	# Middlewares
 	- App\Middlewares\RateLimitMiddleware
@@ -77,6 +78,7 @@ services:
 	- App\Controllers\TriviaController
 	- App\Controllers\UUIDController
 	- App\Controllers\FoxController
+	- App\Controllers\VatController
 
 extensions:
 	# Apitte extensions
