@@ -20,7 +20,7 @@ session:
 
 services:
 	router: App\RouterFactory::createRouter
-	tools: LuRy\Tools\Tools
+	# tools: LuRy\Tools\Tools  # Temporarily disabled - private repository
 
 	# HTTP Client Service
 	- App\Services\HttpClientService
@@ -54,6 +54,7 @@ services:
 	- App\Services\UrlShortenerService
 	- App\Services\HashService
 	- App\Services\NewsRssService
+	- App\Services\ImageService
 
 	# Middlewares
 	- App\Middlewares\RateLimitMiddleware
@@ -87,6 +88,7 @@ services:
 	- App\Controllers\UrlShortenerController
 	- App\Controllers\HashController
 	- App\Controllers\NewsRssController
+	- App\Controllers\ImageController
 
 extensions:
 	# Apitte extensions
