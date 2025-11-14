@@ -18,9 +18,9 @@
 - ✅ **DOMDocument** parsery (robustnější než regex)
 - ✅ **Dependency Injection**
 - ✅ **CORS support**
-- ✅ **22+ API Endpoints** (rozšíření z 6 na 22+)
+- ✅ **26+ API Endpoints** (rozšíření z 6 na 26+)
 - ✅ **Rate Limiting** (100 req/min per IP)
-- ✅ **17 nových API** (Joke, Crypto, Countries, ISS, RUIAN, Zásilkovna a další)
+- ✅ **21 nových API** (Joke, Crypto, Countries, ISS, RUIAN, QR, URL Shortener, Hash Tools, News RSS a další)
 
 ---
 
@@ -47,9 +47,9 @@ Analýza datových zdrojů: **[docs/DATA_SOURCES_ANALYSIS.md](docs/DATA_SOURCES_
 
 ---
 
-## 🌐 API Endpointy (22+ APIs)
+## 🌐 API Endpointy (26+ APIs)
 
-### 🇨🇿 České API (8 endpoints)
+### 🇨🇿 České API (9 endpoints)
 
 #### Svátky
 ```bash
@@ -106,6 +106,13 @@ GET /ruian/validate?ulice=Karlova&cislo=1&obec=Praha  # Validace adresy
 GET /zasilkovna/track/Z123456789      # Sledování balíku
 ```
 
+#### České zprávy (RSS)
+```bash
+GET /news/sources                     # Seznam RSS zdrojů (ČT24, Novinky, Aktuálně, Blesk)
+GET /news/latest?source=ct24&limit=10 # Poslední zprávy ze zdroje
+GET /news/search?query=Babiš          # Vyhledávání ve zprávách
+```
+
 ---
 
 ### 🎉 Fun APIs (8 endpoints)
@@ -141,8 +148,33 @@ GET /trivia/                           # Trivia otázky
 
 ---
 
-### 🔧 Utility APIs (1 endpoint)
+### 🔧 Utility APIs (8 endpoints)
 
+#### QR Kódy
+```bash
+GET /qr/generate?data=https://example.com&size=300  # QR kód pro URL/text
+POST /qr/vcard                                      # vCard kontakt QR
+GET /qr/wifi?ssid=WiFi&password=pass                # WiFi QR kód
+```
+
+#### URL Shortener
+```bash
+GET /url/shorten?url=https://long-url.com           # Zkrátit URL (is.gd/TinyURL)
+GET /url/shorten?url=...&alias=mylink               # S vlastním aliasem (is.gd)
+GET /url/stats?short_url=https://is.gd/abc         # Statistiky (is.gd only)
+```
+
+#### Hash & Encoding
+```bash
+GET /hash/?data=password&algo=sha256                # Hash (MD5, SHA*, ...)
+GET /hash/base64/encode?data=Hello                  # Base64 encode
+GET /hash/base64/decode?data=SGVsbG8                # Base64 decode
+GET /hash/hex/encode?data=Test                      # HEX encode
+GET /hash/hmac?data=msg&key=secret&algo=sha256      # HMAC signature
+GET /hash/algorithms                                # Seznam algoritmů
+```
+
+#### UUID
 ```bash
 GET /uuid/                    # Vygenerování UUID
 GET /uuid/?count=5            # 5 UUID najednou
