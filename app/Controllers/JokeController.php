@@ -4,23 +4,18 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use Apitte\Core\Attribute\Controller\Path;
-use Apitte\Core\Attribute\Controller\Method;
-use Apitte\Core\Attribute\Controller\Tag;
-use Apitte\Core\Attribute\Controller\OpenApi;
-use Apitte\Core\Attribute\Controller\RequestParameter;
-use Apitte\Core\Attribute\Controller\Response as ApiResponse;
+use Apitte\Core\Annotation\Controller\Path;
+use Apitte\Core\Annotation\Controller\Method;
+use Apitte\Core\Annotation\Controller\Tag;
+use Apitte\Core\Annotation\Controller\OpenApi;
+use Apitte\Core\Annotation\Controller\RequestParameter;
+use Apitte\Core\Annotation\Controller\Response as ApiResponse;
 use Apitte\Core\Http\ApiRequest;
 use Apitte\Core\Http\ApiResponse as HttpApiResponse;
 use App\Services\JokeService;
 
 #[Path('/joke')]
 #[Tag('Jokes & Fun')]
-#[OpenApi('
-  Náhodné vtipy z JokeAPI.
-  Kategorie: Programming, Misc, Dark, Pun, Spooky, Christmas.
-  Data jsou cachována 1 hodinu.
-')]
 final class JokeController extends BaseController
 {
     public function __construct(
@@ -32,17 +27,9 @@ final class JokeController extends BaseController
     #[Method('GET')]
     #[RequestParameter(name: 'category', type: 'string', in: 'query', required: false, description: 'Kategorie vtipu (Programming, Misc, Dark, Pun, Any)')]
     #[RequestParameter(name: 'safe', type: 'bool', in: 'query', required: false, description: 'Pouze bezpečné vtipy (true/false, výchozí true)')]
-    #[OpenApi('
-      Získá náhodný vtip z vybrané kategorie.
-
-      Příklady:
-      - /joke/ - náhodný bezpečný vtip
-      - /joke/?category=Programming - vtip o programování
-      - /joke/?category=Pun&safe=false - slovní hříčka (včetně nesafé)
-    ')]
-    #[ApiResponse(code: 200, description: 'Náhodný vtip')]
-    #[ApiResponse(code: 400, description: 'Neplatná kategorie')]
-    #[ApiResponse(code: 500, description: 'Interní chyba serveru')]
+        #[ApiResponse(code: '200', description: 'Náhodný vtip')]
+    #[ApiResponse(code: '400', description: 'Neplatná kategorie')]
+    #[ApiResponse(code: '500', description: 'Interní chyba serveru')]
     public function getRandomJoke(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
@@ -62,13 +49,8 @@ final class JokeController extends BaseController
 
     #[Path('/programming')]
     #[Method('GET')]
-    #[OpenApi('
-      Získá náhodný vtip o programování.
-
-      Krátká cesta pro /joke/?category=Programming&safe=true
-    ')]
-    #[ApiResponse(code: 200, description: 'Vtip o programování')]
-    #[ApiResponse(code: 500, description: 'Interní chyba serveru')]
+        #[ApiResponse(code: '200', description: 'Vtip o programování')]
+    #[ApiResponse(code: '500', description: 'Interní chyba serveru')]
     public function getProgrammingJoke(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {

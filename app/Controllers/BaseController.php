@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use Apitte\Core\Http\ApiResponse;
+use Apitte\Core\UI\Controller\IController;
 use Contributte\Psr7\Psr7ResponseFactory;
 
 /**
  * Základní controller pro všechny API controllery
  */
-abstract class BaseController
+abstract class BaseController implements IController
 {
     /**
      * Vytvoří úspěšnou JSON odpověď

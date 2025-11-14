@@ -54,35 +54,93 @@ services:
 	- App\Middlewares\RateLimitMiddleware
 
 	# API Controllers
-	- App\Controllers\SvatkyController
-	- App\Controllers\PocasiController
-	- App\Controllers\HoroskopyController
-	- App\Controllers\TvController
-	- App\Controllers\MistnostController
-	- App\Controllers\CnbController
-	- App\Controllers\AresController
-	- App\Controllers\RuianController
-	- App\Controllers\ZasilkovnaController
-	- App\Controllers\JokeController
-	- App\Controllers\CatFactsController
-	- App\Controllers\DogController
-	- App\Controllers\AdviceController
-	- App\Controllers\CryptoController
-	- App\Controllers\QuotesController
-	- App\Controllers\ChuckNorrisController
-	- App\Controllers\NumbersController
-	- App\Controllers\CountriesController
-	- App\Controllers\BoredController
-	- App\Controllers\ISSController
-	- App\Controllers\TriviaController
-	- App\Controllers\UUIDController
-	- App\Controllers\FoxController
-	- App\Controllers\VatController
-	- App\Controllers\QrCodeController
-	- App\Controllers\UrlShortenerController
-	- App\Controllers\HashController
-	- App\Controllers\NewsRssController
-	- App\Controllers\ImageController
+	-
+		factory: App\Controllers\SvatkyController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\PocasiController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\HoroskopyController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\TvController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\MistnostController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\CnbController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\AresController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\RuianController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\ZasilkovnaController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\JokeController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\CatFactsController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\DogController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\AdviceController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\CryptoController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\QuotesController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\ChuckNorrisController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\NumbersController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\CountriesController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\BoredController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\ISSController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\TriviaController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\UUIDController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\FoxController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\VatController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\QrCodeController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\UrlShortenerController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\HashController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\NewsRssController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\ImageController
+		tags: [apitte.core.controller]
 
 extensions:
 	# Apitte extensions (contributte/apitte ^0.12)

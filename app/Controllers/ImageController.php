@@ -4,23 +4,18 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use Apitte\Core\Attribute\Controller\Path;
-use Apitte\Core\Attribute\Controller\Method;
-use Apitte\Core\Attribute\Controller\Tag;
-use Apitte\Core\Attribute\Controller\OpenApi;
-use Apitte\Core\Attribute\Controller\RequestParameter;
-use Apitte\Core\Attribute\Controller\Response as ApiResponse;
+use Apitte\Core\Annotation\Controller\Path;
+use Apitte\Core\Annotation\Controller\Method;
+use Apitte\Core\Annotation\Controller\Tag;
+use Apitte\Core\Annotation\Controller\OpenApi;
+use Apitte\Core\Annotation\Controller\RequestParameter;
+use Apitte\Core\Annotation\Controller\Response as ApiResponse;
 use Apitte\Core\Http\ApiRequest;
 use Apitte\Core\Http\ApiResponse as HttpApiResponse;
 use App\Services\ImageService;
 
 #[Path('/image')]
 #[Tag('Utility APIs')]
-#[OpenApi('
-  Manipulace s obrázky pomocí PHP GD knihovny.
-  Změna velikosti, ořez, rotace, konverze formátů, vodoznaky a další.
-  Podporuje URL nebo base64 jako vstup, vrací base64 data URI.
-')]
 final class ImageController extends BaseController
 {
     public function __construct(
@@ -36,22 +31,8 @@ final class ImageController extends BaseController
     #[RequestParameter(name: 'height', type: 'int', in: 'query', required: false, description: 'Nová výška (0 = auto)')]
     #[RequestParameter(name: 'format', type: 'string', in: 'query', required: false, description: 'Formát: jpg, png, webp, gif (výchozí jpg)')]
     #[RequestParameter(name: 'quality', type: 'int', in: 'query', required: false, description: 'Kvalita 1-100 (výchozí 85)')]
-    #[OpenApi('
-      Změní velikost obrázku se zachováním poměru stran.
-
-      Příklady:
-      - /image/resize?url=https://example.com/photo.jpg&width=300
-      - /image/resize?url=https://example.com/photo.jpg&height=200
-      - /image/resize?url=https://example.com/photo.jpg&width=800&height=600&format=webp
-
-      Použití v IRC:
-      !resize https://example.com/photo.jpg 300x200 → Vrátí změněný obrázek
-
-      Pokud zadáte pouze šířku nebo výšku, druhý rozměr se dopočítá
-      podle poměru stran. Pokud zadáte oba, obrázek se natáhne/smrští.
-    ')]
-    #[ApiResponse(code: 200, description: 'Obrázek změněn')]
-    #[ApiResponse(code: 400, description: 'Neplatné parametry')]
+        #[ApiResponse(code: '200', description: 'Obrázek změněn')]
+    #[ApiResponse(code: '400', description: 'Neplatné parametry')]
     public function resize(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
@@ -80,19 +61,8 @@ final class ImageController extends BaseController
     #[RequestParameter(name: 'height', type: 'int', in: 'query', required: true, description: 'Výška ořezu')]
     #[RequestParameter(name: 'format', type: 'string', in: 'query', required: false, description: 'Formát výstupu')]
     #[RequestParameter(name: 'quality', type: 'int', in: 'query', required: false, description: 'Kvalita 1-100')]
-    #[OpenApi('
-      Ořízne obrázek na zadané souřadnice a rozměry.
-
-      Příklady:
-      - /image/crop?url=https://example.com/photo.jpg&x=100&y=100&width=300&height=200
-
-      Použití:
-      - Ořez profilových obrázků
-      - Odstranění okrajů
-      - Focus na konkrétní část obrázku
-    ')]
-    #[ApiResponse(code: 200, description: 'Obrázek oříznut')]
-    #[ApiResponse(code: 400, description: 'Neplatné parametry')]
+        #[ApiResponse(code: '200', description: 'Obrázek oříznut')]
+    #[ApiResponse(code: '400', description: 'Neplatné parametry')]
     public function crop(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
@@ -120,17 +90,8 @@ final class ImageController extends BaseController
     #[RequestParameter(name: 'degrees', type: 'int', in: 'query', required: true, description: 'Úhel otočení: 90, 180, 270')]
     #[RequestParameter(name: 'format', type: 'string', in: 'query', required: false, description: 'Formát výstupu')]
     #[RequestParameter(name: 'quality', type: 'int', in: 'query', required: false, description: 'Kvalita 1-100')]
-    #[OpenApi('
-      Otočí obrázek o zadaný úhel.
-
-      Příklady:
-      - /image/rotate?url=https://example.com/photo.jpg&degrees=90
-      - /image/rotate?url=https://example.com/photo.jpg&degrees=180
-
-      Podporované úhly: 90, 180, 270 stupňů
-    ')]
-    #[ApiResponse(code: 200, description: 'Obrázek otočen')]
-    #[ApiResponse(code: 400, description: 'Neplatný úhel')]
+        #[ApiResponse(code: '200', description: 'Obrázek otočen')]
+    #[ApiResponse(code: '400', description: 'Neplatný úhel')]
     public function rotate(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
@@ -155,21 +116,8 @@ final class ImageController extends BaseController
     #[RequestParameter(name: 'mode', type: 'string', in: 'query', required: true, description: 'Režim: horizontal, vertical, both')]
     #[RequestParameter(name: 'format', type: 'string', in: 'query', required: false, description: 'Formát výstupu')]
     #[RequestParameter(name: 'quality', type: 'int', in: 'query', required: false, description: 'Kvalita 1-100')]
-    #[OpenApi('
-      Převrátí (zrcadlí) obrázek horizontálně nebo vertikálně.
-
-      Příklady:
-      - /image/flip?url=https://example.com/photo.jpg&mode=horizontal
-      - /image/flip?url=https://example.com/photo.jpg&mode=vertical
-      - /image/flip?url=https://example.com/photo.jpg&mode=both
-
-      Režimy:
-      - horizontal = zleva doprava → zprava doleva
-      - vertical = shora dolů → zespodu nahoru
-      - both = obě osy současně
-    ')]
-    #[ApiResponse(code: 200, description: 'Obrázek převrácen')]
-    #[ApiResponse(code: 400, description: 'Neplatný režim')]
+        #[ApiResponse(code: '200', description: 'Obrázek převrácen')]
+    #[ApiResponse(code: '400', description: 'Neplatný režim')]
     public function flip(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
@@ -197,21 +145,8 @@ final class ImageController extends BaseController
     #[RequestParameter(name: 'base64', type: 'string', in: 'query', required: false, description: 'Base64 obrázku')]
     #[RequestParameter(name: 'format', type: 'string', in: 'query', required: true, description: 'Cílový formát: jpg, png, webp, gif')]
     #[RequestParameter(name: 'quality', type: 'int', in: 'query', required: false, description: 'Kvalita 1-100 (jen jpg/webp)')]
-    #[OpenApi('
-      Převede obrázek na jiný formát.
-
-      Příklady:
-      - /image/convert?url=https://example.com/photo.png&format=jpg
-      - /image/convert?url=https://example.com/photo.jpg&format=webp&quality=90
-
-      Podporované formáty:
-      - jpg/jpeg - dobrá komprese, bez průhlednosti
-      - png - bezztrátová komprese, podporuje průhlednost
-      - webp - moderní formát, lepší komprese (vyžaduje podporu v PHP)
-      - gif - animace, omezená barevná paleta
-    ')]
-    #[ApiResponse(code: 200, description: 'Obrázek převeden')]
-    #[ApiResponse(code: 400, description: 'Nepodporovaný formát')]
+        #[ApiResponse(code: '200', description: 'Obrázek převeden')]
+    #[ApiResponse(code: '400', description: 'Nepodporovaný formát')]
     public function convert(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
@@ -241,22 +176,8 @@ final class ImageController extends BaseController
     #[RequestParameter(name: 'size', type: 'int', in: 'query', required: false, description: 'Velikost písma 1-5')]
     #[RequestParameter(name: 'format', type: 'string', in: 'query', required: false, description: 'Formát výstupu')]
     #[RequestParameter(name: 'quality', type: 'int', in: 'query', required: false, description: 'Kvalita 1-100')]
-    #[OpenApi('
-      Přidá textový vodoznak na obrázek.
-
-      Příklady:
-      - /image/watermark?url=https://example.com/photo.jpg&text=Copyright%202025
-      - /image/watermark?url=https://example.com/photo.jpg&text=My%20Photo&position=bottomright&size=3
-
-      Pozice:
-      - topleft = levý horní roh
-      - topright = pravý horní roh
-      - bottomleft = levý dolní roh
-      - bottomright = pravý dolní roh (výchozí)
-      - center = střed obrázku
-    ')]
-    #[ApiResponse(code: 200, description: 'Vodoznak přidán')]
-    #[ApiResponse(code: 400, description: 'Chybí text')]
+        #[ApiResponse(code: '200', description: 'Vodoznak přidán')]
+    #[ApiResponse(code: '400', description: 'Chybí text')]
     public function watermark(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
@@ -284,26 +205,8 @@ final class ImageController extends BaseController
     #[Method('GET')]
     #[RequestParameter(name: 'url', type: 'string', in: 'query', required: false, description: 'URL obrázku')]
     #[RequestParameter(name: 'base64', type: 'string', in: 'query', required: false, description: 'Base64 obrázku')]
-    #[OpenApi('
-      Získá informace o obrázku bez jeho úpravy.
-
-      Příklady:
-      - /image/info?url=https://example.com/photo.jpg
-
-      Vrací:
-      - Rozměry (šířka × výška)
-      - Typ/formát (jpg, png, gif, webp)
-      - MIME typ
-      - Velikost v bajtech a KB
-      - Poměr stran (aspect ratio)
-
-      Použití:
-      - Validace před nahráním
-      - Automatická detekce formátu
-      - Zobrazení informací o obrázku
-    ')]
-    #[ApiResponse(code: 200, description: 'Informace získány')]
-    #[ApiResponse(code: 400, description: 'Neplatný obrázek')]
+        #[ApiResponse(code: '200', description: 'Informace získány')]
+    #[ApiResponse(code: '400', description: 'Neplatný obrázek')]
     public function getInfo(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {

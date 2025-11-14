@@ -4,22 +4,18 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use Apitte\Core\Attribute\Controller\Path;
-use Apitte\Core\Attribute\Controller\Method;
-use Apitte\Core\Attribute\Controller\Tag;
-use Apitte\Core\Attribute\Controller\OpenApi;
-use Apitte\Core\Attribute\Controller\RequestParameter;
-use Apitte\Core\Attribute\Controller\Response as ApiResponse;
+use Apitte\Core\Annotation\Controller\Path;
+use Apitte\Core\Annotation\Controller\Method;
+use Apitte\Core\Annotation\Controller\Tag;
+use Apitte\Core\Annotation\Controller\OpenApi;
+use Apitte\Core\Annotation\Controller\RequestParameter;
+use Apitte\Core\Annotation\Controller\Response as ApiResponse;
 use Apitte\Core\Http\ApiRequest;
 use Apitte\Core\Http\ApiResponse as HttpApiResponse;
 use App\Services\FoxService;
 
 #[Path('/fox')]
 #[Tag('Fun APIs')]
-#[OpenApi('
-  Náhodné obrázky lišek z randomfox.ca.
-  Vrací náhodné fotografie lišek.
-')]
 final class FoxController extends BaseController
 {
     public function __construct(
@@ -30,16 +26,9 @@ final class FoxController extends BaseController
     #[Path('/')]
     #[Method('GET')]
     #[RequestParameter(name: 'count', type: 'int', in: 'query', required: false, description: 'Počet obrázků (1-10, výchozí 1)')]
-    #[OpenApi('
-      Získá náhodný obrázek lišky.
-
-      Příklady:
-      - /fox/ - jeden obrázek lišky
-      - /fox/?count=5 - pět obrázků lišek
-    ')]
-    #[ApiResponse(code: 200, description: 'Náhodný obrázek lišky')]
-    #[ApiResponse(code: 400, description: 'Neplatný počet')]
-    #[ApiResponse(code: 500, description: 'Interní chyba serveru')]
+        #[ApiResponse(code: '200', description: 'Náhodný obrázek lišky')]
+    #[ApiResponse(code: '400', description: 'Neplatný počet')]
+    #[ApiResponse(code: '500', description: 'Interní chyba serveru')]
     public function getRandomFox(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {

@@ -4,23 +4,18 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use Apitte\Core\Attribute\Controller\Path;
-use Apitte\Core\Attribute\Controller\Method;
-use Apitte\Core\Attribute\Controller\Tag;
-use Apitte\Core\Attribute\Controller\OpenApi;
-use Apitte\Core\Attribute\Controller\RequestParameter;
-use Apitte\Core\Attribute\Controller\Response as ApiResponse;
+use Apitte\Core\Annotation\Controller\Path;
+use Apitte\Core\Annotation\Controller\Method;
+use Apitte\Core\Annotation\Controller\Tag;
+use Apitte\Core\Annotation\Controller\OpenApi;
+use Apitte\Core\Annotation\Controller\RequestParameter;
+use Apitte\Core\Annotation\Controller\Response as ApiResponse;
 use Apitte\Core\Http\ApiRequest;
 use Apitte\Core\Http\ApiResponse as HttpApiResponse;
 use App\Services\CnbKurzyService;
 
 #[Path('/cnb')]
 #[Tag('ČNB Kurzy')]
-#[OpenApi('
-  Oficiální kurzy měn České národní banky.
-  Data jsou aktualizována 1x denně po 14:30 (pracovní dny).
-  Všechny kurzy jsou vůči české koruně (CZK).
-')]
 final class CnbController extends BaseController
 {
     public function __construct(
@@ -30,12 +25,8 @@ final class CnbController extends BaseController
 
     #[Path('/kurzy')]
     #[Method('GET')]
-    #[OpenApi('
-      Získá kurzy všech měn z denního kurzovního lístku ČNB.
-      Vrací kurzy vůči CZK pro všechny podporované měny.
-    ')]
-    #[ApiResponse(code: 200, description: 'Seznam všech kurzů')]
-    #[ApiResponse(code: 500, description: 'Interní chyba serveru')]
+        #[ApiResponse(code: '200', description: 'Seznam všech kurzů')]
+    #[ApiResponse(code: '500', description: 'Interní chyba serveru')]
     public function getAllKurzy(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
@@ -49,19 +40,9 @@ final class CnbController extends BaseController
     #[Path('/kurzy/{mena}')]
     #[Method('GET')]
     #[RequestParameter(name: 'mena', type: 'string', in: 'path', required: true, description: 'Kód měny (USD, EUR, GBP, atd.)')]
-    #[OpenApi('
-      Získá kurz konkrétní měny.
-
-      Příklady kódů měn:
-      - USD - americký dolar
-      - EUR - euro
-      - GBP - britská libra
-      - PLN - polský zlotý
-      - CHF - švýcarský frank
-    ')]
-    #[ApiResponse(code: 200, description: 'Kurz zadané měny')]
-    #[ApiResponse(code: 404, description: 'Měna nenalezena')]
-    #[ApiResponse(code: 500, description: 'Interní chyba serveru')]
+        #[ApiResponse(code: '200', description: 'Kurz zadané měny')]
+    #[ApiResponse(code: '404', description: 'Měna nenalezena')]
+    #[ApiResponse(code: '500', description: 'Interní chyba serveru')]
     public function getKurz(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
@@ -80,18 +61,10 @@ final class CnbController extends BaseController
     #[RequestParameter(name: 'amount', type: 'float', in: 'query', required: true, description: 'Částka k převodu')]
     #[RequestParameter(name: 'from', type: 'string', in: 'query', required: true, description: 'Zdrojová měna (kód)')]
     #[RequestParameter(name: 'to', type: 'string', in: 'query', required: true, description: 'Cílová měna (kód)')]
-    #[OpenApi('
-      Převede částku z jedné měny do druhé podle aktuálního kurzu ČNB.
-
-      Příklady použití:
-      - /cnb/prevod?amount=100&from=USD&to=CZK
-      - /cnb/prevod?amount=1000&from=CZK&to=EUR
-      - /cnb/prevod?amount=50&from=EUR&to=USD
-    ')]
-    #[ApiResponse(code: 200, description: 'Výsledek převodu měny')]
-    #[ApiResponse(code: 400, description: 'Chybí povinné parametry')]
-    #[ApiResponse(code: 404, description: 'Měna nenalezena')]
-    #[ApiResponse(code: 500, description: 'Interní chyba serveru')]
+        #[ApiResponse(code: '200', description: 'Výsledek převodu měny')]
+    #[ApiResponse(code: '400', description: 'Chybí povinné parametry')]
+    #[ApiResponse(code: '404', description: 'Měna nenalezena')]
+    #[ApiResponse(code: '500', description: 'Interní chyba serveru')]
     public function convertCurrency(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
