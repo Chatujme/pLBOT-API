@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Middlewares;
 
 use Nette\Caching\Cache;
+use Nette\Caching\Storage;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -23,10 +24,13 @@ final class RateLimitMiddleware implements MiddlewareInterface
     private const RATE_LIMIT = 100; // počet požadavků
     private const RATE_WINDOW = 60; // časové okno v sekundách (1 minuta)
 
+    private Cache $cache;
+
     public function __construct(
-        private readonly Cache $cache,
+        Storage $storage,
         private readonly Psr7ResponseFactory $responseFactory
     ) {
+        $this->cache = new Cache($storage, self::class);
     }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface

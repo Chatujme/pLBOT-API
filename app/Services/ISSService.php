@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Nette\Caching\Cache;
+use Nette\Caching\Storage;
 
 /**
  * Service pro sledování polohy ISS (International Space Station)
  */
 final class ISSService
 {
+    private Cache $cache;
+
     private const URL_ISS_POSITION = 'http://api.open-notify.org/iss-now.json';
     private const URL_ISS_PASS = 'http://api.open-notify.org/iss-pass.json';
     private const URL_ASTRONAUTS = 'http://api.open-notify.org/astros.json';
@@ -18,8 +21,9 @@ final class ISSService
 
     public function __construct(
         private readonly HttpClientService $httpClient,
-        private readonly Cache $cache
+        Storage $storage
     ) {
+        $this->cache = new Cache($storage, self::class);
     }
 
     /**

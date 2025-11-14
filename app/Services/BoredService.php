@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Nette\Caching\Cache;
+use Nette\Caching\Storage;
 
 /**
  * Service pro získávání nápadů na aktivity z Bored API
  */
 final class BoredService
 {
+    private Cache $cache;
+
     private const URL_BORED_API = 'https://www.boredapi.com/api/activity';
     private const CACHE_EXPIRATION = '1 hour';
 
@@ -18,8 +21,9 @@ final class BoredService
 
     public function __construct(
         private readonly HttpClientService $httpClient,
-        private readonly Cache $cache
+        Storage $storage
     ) {
+        $this->cache = new Cache($storage, self::class);
     }
 
     /**

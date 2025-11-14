@@ -5,24 +5,20 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Nette\Caching\Cache;
-use Nette\Caching\Storage;
 
 /**
  * Service pro zkracování URL pomocí is.gd a TinyURL
  */
 final class UrlShortenerService
 {
-    private Cache $cache;
-
     private const ISGD_API = 'https://is.gd/create.php';
     private const TINYURL_API = 'https://tinyurl.com/api-create.php';
     private const CACHE_EXPIRATION = '1 month'; // Zkrácené URLs se nemění
 
     public function __construct(
         private readonly HttpClientService $httpClient,
-        Storage $storage
+        private readonly Cache $cache
     ) {
-        $this->cache = new Cache($storage, self::class);
     }
 
     /**

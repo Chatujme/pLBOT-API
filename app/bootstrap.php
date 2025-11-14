@@ -15,7 +15,6 @@ $configurator->setTempDirectory(__DIR__ . '/../temp');
 // Register RobotLoader - will load all classes from app directory
 $configurator->createRobotLoader()
 	->addDirectory(__DIR__)
-	->addDirectory(__DIR__ . '/../vendor/others')
 	->register();
 
 // Load configuration files

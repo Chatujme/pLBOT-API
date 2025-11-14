@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Nette\Caching\Cache;
-use Nette\Caching\Storage;
 
 /**
  * Service pro získávání informací o firmách z registru ARES
@@ -15,17 +14,14 @@ use Nette\Caching\Storage;
  */
 final class AresService
 {
-    private Cache $cache;
-
     private const URL_ARES_API_BASE = 'https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty';
     private const URL_ARES_API_SEARCH = 'https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty/vyhledat';
     private const CACHE_EXPIRATION = '1 month'; // Data o firmách se mění velmi zřídka
 
     public function __construct(
         private readonly HttpClientService $httpClient,
-        Storage $storage
+        private readonly Cache $cache
     ) {
-        $this->cache = new Cache($storage, self::class);
     }
 
     /**

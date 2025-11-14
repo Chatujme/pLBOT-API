@@ -5,20 +5,24 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Nette\Caching\Cache;
+use Nette\Caching\Storage;
 
 /**
  * Service pro získávání obrázků psů
  */
 final class DogService
 {
+    private Cache $cache;
+
     private const URL_DOG_API = 'https://dog.ceo/api/breeds/image/random';
     private const URL_DOG_BREEDS = 'https://dog.ceo/api/breeds/list/all';
     private const CACHE_EXPIRATION = '1 hour';
 
     public function __construct(
         private readonly HttpClientService $httpClient,
-        private readonly Cache $cache
+        Storage $storage
     ) {
+        $this->cache = new Cache($storage, self::class);
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Nette\Caching\Cache;
+use Nette\Caching\Storage;
 
 /**
  * Service pro získávání informací z RUIAN
@@ -14,6 +15,8 @@ use Nette\Caching\Cache;
  */
 final class RuianService
 {
+    private Cache $cache;
+
     private const URL_RUIAN_MAP_SERVER = 'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer';
     private const CACHE_EXPIRATION = '1 week'; // Adresy se mění velmi zřídka
 
@@ -27,8 +30,9 @@ final class RuianService
 
     public function __construct(
         private readonly HttpClientService $httpClient,
-        private readonly Cache $cache
+        Storage $storage
     ) {
+        $this->cache = new Cache($storage, self::class);
     }
 
     /**

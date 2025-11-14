@@ -7,20 +7,14 @@ parameters:
 php:
 	date.timezone: Europe/Prague
 
-
-application:
-	errorPresenter: Error
-	mapping:
-		*: App\*Module\Presenters\*Presenter
-
-
-session:
-	expiration: 14 days
-
-
 services:
-	router: App\RouterFactory::createRouter
+	# Cache storage for API responses
+	cache.storage: Nette\Caching\Storages\FileStorage(%tempDir%/cache)
+	# router: App\RouterFactory::createRouter  # Disabled - using Apitte attribute-based routing instead
 	# tools: LuRy\Tools\Tools  # Temporarily disabled - private repository
+
+	# PSR-7 Response Factory for middleware
+	- Contributte\Psr7\Psr7ResponseFactory
 
 	# HTTP Client Service
 	- App\Services\HttpClientService
@@ -91,25 +85,24 @@ services:
 	- App\Controllers\ImageController
 
 extensions:
-	# Apitte extensions
+	# Apitte extensions (contributte/apitte ^0.12)
 	api: Apitte\Core\DI\ApiExtension
-	middlewares: Apitte\Middlewares\DI\MiddlewaresExtension
-	openapi: Apitte\OpenApi\DI\OpenApiExtension
+	middlewares: Contributte\Middlewares\DI\MiddlewaresExtension
 
 api:
+	debug: %debugMode%
+	catchException: true
 	plugins:
-		Apitte\Core\DI\Plugin\CoreSchemaPlugin:
-		Apitte\Middlewares\DI\Plugin\CoreMiddlewaresPlugin:
+		Apitte\Core\DI\Plugin\CoreSchemaPlugin: []
+		Apitte\Middlewares\DI\MiddlewaresPlugin:
+			tracy: %debugMode%
+		Apitte\OpenApi\DI\OpenApiPlugin:
+			definition:
+				openapi: "3.0.2"
+				info:
+					title: "pLBOT API"
+					version: "2.0"
+					description: "Modernizované API pro IRC bota pLBOT"
 
-middlewares:
-	# Enable Tracy debug mode
-	tracy: %debugMode%
-	# Rate limiting middleware
-	middlewares:
-		- App\Middlewares\RateLimitMiddleware
-
-openapi:
-	meta:
-		title: pLBOT API
-		version: "2.0"
-		description: "Modernizované API pro IRC bota pLBOT"
+# Middlewares are configured via Apitte plugins now
+# Rate limiting middleware is registered directly in services
