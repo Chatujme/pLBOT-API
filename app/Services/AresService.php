@@ -14,7 +14,8 @@ use Nette\Caching\Cache;
  */
 final class AresService
 {
-    private const URL_ARES_API = 'https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty/vyhledat';
+    private const URL_ARES_API_BASE = 'https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty';
+    private const URL_ARES_API_SEARCH = 'https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty/vyhledat';
     private const CACHE_EXPIRATION = '1 month'; // Data o firmách se mění velmi zřídka
 
     public function __construct(
@@ -50,15 +51,15 @@ final class AresService
         }
 
         try {
-            $url = self::URL_ARES_API . '?ico=' . urlencode($ico);
+            // Nové API používá IČO v cestě, ne jako query parametr
+            $url = self::URL_ARES_API_BASE . '/' . $ico;
             $data = $this->httpClient->getJson($url);
 
-            if (!isset($data['ekonomickeSubjekty']) || count($data['ekonomickeSubjekty']) === 0) {
+            if (empty($data)) {
                 throw new \RuntimeException("Firma s IČO {$ico} nebyla nalezena");
             }
 
-            $subjekt = $data['ekonomickeSubjekty'][0];
-            $result = ['data' => $this->formatSubjektData($subjekt)];
+            $result = ['data' => $this->formatSubjektData($data)];
 
             $this->cache->save($cacheKey, $result, [
                 Cache::EXPIRE => self::CACHE_EXPIRATION,
@@ -92,10 +93,16 @@ final class AresService
         }
 
         try {
-            $url = self::URL_ARES_API . '?obchodniJmeno=' . urlencode($nazev);
-            $data = $this->httpClient->getJson($url);
+            // Pro vyhledávání podle názvu musíme použít POST endpoint
+            $postData = [
+                'obchodniJmeno' => $nazev,
+                'start' => 0,
+                'pocet' => $limit,
+            ];
 
-            if (!isset($data['ekonomickeSubjekty'])) {
+            $data = $this->httpClient->postJson(self::URL_ARES_API_SEARCH, $postData);
+
+            if (!isset($data['ekonomickeSubjekty']) || empty($data['ekonomickeSubjekty'])) {
                 return ['data' => []];
             }
 
