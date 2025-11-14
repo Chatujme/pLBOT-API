@@ -4,22 +4,18 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use Apitte\Core\Attribute\Controller\Path;
-use Apitte\Core\Attribute\Controller\Method;
-use Apitte\Core\Attribute\Controller\Tag;
-use Apitte\Core\Attribute\Controller\OpenApi;
-use Apitte\Core\Attribute\Controller\RequestParameter;
-use Apitte\Core\Attribute\Controller\Response as ApiResponse;
+use Apitte\Core\Annotation\Controller\Path;
+use Apitte\Core\Annotation\Controller\Method;
+use Apitte\Core\Annotation\Controller\Tag;
+use Apitte\Core\Annotation\Controller\OpenApi;
+use Apitte\Core\Annotation\Controller\RequestParameter;
+use Apitte\Core\Annotation\Controller\Response as ApiResponse;
 use Apitte\Core\Http\ApiRequest;
 use Apitte\Core\Http\ApiResponse as HttpApiResponse;
 use App\Services\BoredService;
 
 #[Path('/bored')]
 #[Tag('Fun APIs')]
-#[OpenApi('
-  Návrhy aktivit když se nudíte z Bored API.
-  Vrací náhodné nápady na činnosti podle typu a počtu lidí.
-')]
 final class BoredController extends BaseController
 {
     public function __construct(
@@ -31,18 +27,9 @@ final class BoredController extends BaseController
     #[Method('GET')]
     #[RequestParameter(name: 'type', type: 'string', in: 'query', required: false, description: 'Typ aktivity (education, recreational, social, diy, charity, cooking, relaxation, music, busywork)')]
     #[RequestParameter(name: 'participants', type: 'int', in: 'query', required: false, description: 'Počet účastníků (1-10)')]
-    #[OpenApi('
-      Získá náhodný návrh aktivity.
-
-      Příklady:
-      - /bored/ - jakákoliv aktivita
-      - /bored/?type=social - sociální aktivita
-      - /bored/?participants=2 - aktivita pro 2 lidi
-      - /bored/?type=cooking&participants=1 - vaření pro jednoho
-    ')]
-    #[ApiResponse(code: 200, description: 'Návrh aktivity')]
-    #[ApiResponse(code: 400, description: 'Neplatné parametry')]
-    #[ApiResponse(code: 500, description: 'Interní chyba serveru')]
+        #[ApiResponse(code: '200', description: 'Návrh aktivity')]
+    #[ApiResponse(code: '400', description: 'Neplatné parametry')]
+    #[ApiResponse(code: '500', description: 'Interní chyba serveru')]
     public function getRandomActivity(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
@@ -62,14 +49,9 @@ final class BoredController extends BaseController
     #[Path('/activity/{key}')]
     #[Method('GET')]
     #[RequestParameter(name: 'key', type: 'string', in: 'path', required: true, description: 'Unikátní klíč aktivity')]
-    #[OpenApi('
-      Získá konkrétní aktivitu podle klíče.
-
-      Každá aktivita má unikátní klíč který lze použít pro opětovné získání.
-    ')]
-    #[ApiResponse(code: 200, description: 'Detaily aktivity')]
-    #[ApiResponse(code: 404, description: 'Aktivita nenalezena')]
-    #[ApiResponse(code: 500, description: 'Interní chyba serveru')]
+        #[ApiResponse(code: '200', description: 'Detaily aktivity')]
+    #[ApiResponse(code: '404', description: 'Aktivita nenalezena')]
+    #[ApiResponse(code: '500', description: 'Interní chyba serveru')]
     public function getActivityByKey(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {

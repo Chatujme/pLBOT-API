@@ -4,23 +4,18 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use Apitte\Core\Attribute\Controller\Path;
-use Apitte\Core\Attribute\Controller\Method;
-use Apitte\Core\Attribute\Controller\Tag;
-use Apitte\Core\Attribute\Controller\OpenApi;
-use Apitte\Core\Attribute\Controller\RequestParameter;
-use Apitte\Core\Attribute\Controller\Response as ApiResponse;
+use Apitte\Core\Annotation\Controller\Path;
+use Apitte\Core\Annotation\Controller\Method;
+use Apitte\Core\Annotation\Controller\Tag;
+use Apitte\Core\Annotation\Controller\OpenApi;
+use Apitte\Core\Annotation\Controller\RequestParameter;
+use Apitte\Core\Annotation\Controller\Response as ApiResponse;
 use Apitte\Core\Http\ApiRequest;
 use Apitte\Core\Http\ApiResponse as HttpApiResponse;
 use App\Services\NumbersService;
 
 #[Path('/numbers')]
 #[Tag('Fun APIs')]
-#[OpenApi('
-  Zajímavosti o číslech z NumbersAPI.
-  Vrací zajímavé fakty o číslech, datech a matematice.
-  Data jsou cachována 1 den.
-')]
 final class NumbersController extends BaseController
 {
     public function __construct(
@@ -32,18 +27,9 @@ final class NumbersController extends BaseController
     #[Method('GET')]
     #[RequestParameter(name: 'number', type: 'string', in: 'path', required: true, description: 'Číslo nebo "random"')]
     #[RequestParameter(name: 'type', type: 'string', in: 'query', required: false, description: 'Typ (trivia, math, year) - výchozí trivia')]
-    #[OpenApi('
-      Získá zajímavost o čísle.
-
-      Příklady:
-      - /numbers/42 - zajímavost o čísle 42
-      - /numbers/1337?type=math - matematický fakt o 1337
-      - /numbers/random - náhodná zajímavost
-      - /numbers/1969?type=year - zajímavost o roce 1969
-    ')]
-    #[ApiResponse(code: 200, description: 'Zajímavost o čísle')]
-    #[ApiResponse(code: 400, description: 'Neplatný typ')]
-    #[ApiResponse(code: 500, description: 'Interní chyba serveru')]
+        #[ApiResponse(code: '200', description: 'Zajímavost o čísle')]
+    #[ApiResponse(code: '400', description: 'Neplatný typ')]
+    #[ApiResponse(code: '500', description: 'Interní chyba serveru')]
     public function getNumberFact(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
@@ -69,13 +55,8 @@ final class NumbersController extends BaseController
 
     #[Path('/today')]
     #[Method('GET')]
-    #[OpenApi('
-      Získá zajímavost o dnešním datu.
-
-      Vrací historický fakt, který se stal v tento den.
-    ')]
-    #[ApiResponse(code: 200, description: 'Zajímavost o dnešním datu')]
-    #[ApiResponse(code: 500, description: 'Interní chyba serveru')]
+        #[ApiResponse(code: '200', description: 'Zajímavost o dnešním datu')]
+    #[ApiResponse(code: '500', description: 'Interní chyba serveru')]
     public function getTodayFact(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {

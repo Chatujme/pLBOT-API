@@ -4,22 +4,18 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use Apitte\Core\Attribute\Controller\Path;
-use Apitte\Core\Attribute\Controller\Method;
-use Apitte\Core\Attribute\Controller\Tag;
-use Apitte\Core\Attribute\Controller\OpenApi;
-use Apitte\Core\Attribute\Controller\RequestParameter;
-use Apitte\Core\Attribute\Controller\Response as ApiResponse;
+use Apitte\Core\Annotation\Controller\Path;
+use Apitte\Core\Annotation\Controller\Method;
+use Apitte\Core\Annotation\Controller\Tag;
+use Apitte\Core\Annotation\Controller\OpenApi;
+use Apitte\Core\Annotation\Controller\RequestParameter;
+use Apitte\Core\Annotation\Controller\Response as ApiResponse;
 use Apitte\Core\Http\ApiRequest;
 use Apitte\Core\Http\ApiResponse as HttpApiResponse;
 use App\Services\ChuckNorrisService;
 
 #[Path('/chucknorris')]
 #[Tag('Jokes & Fun')]
-#[OpenApi('
-  Chuck Norris vtipy z oficiálního Chuck Norris API.
-  Vrací náhodné vtipy o Chucku Norrisovi.
-')]
 final class ChuckNorrisController extends BaseController
 {
     public function __construct(
@@ -30,16 +26,8 @@ final class ChuckNorrisController extends BaseController
     #[Path('/')]
     #[Method('GET')]
     #[RequestParameter(name: 'category', type: 'string', in: 'query', required: false, description: 'Kategorie vtipu (dev, movie, food, atd.)')]
-    #[OpenApi('
-      Získá náhodný Chuck Norris vtip.
-
-      Příklady:
-      - /chucknorris/ - náhodný vtip
-      - /chucknorris/?category=dev - vtip o programování
-      - /chucknorris/?category=movie - vtip o filmech
-    ')]
-    #[ApiResponse(code: 200, description: 'Náhodný Chuck Norris vtip')]
-    #[ApiResponse(code: 500, description: 'Interní chyba serveru')]
+        #[ApiResponse(code: '200', description: 'Náhodný Chuck Norris vtip')]
+    #[ApiResponse(code: '500', description: 'Interní chyba serveru')]
     public function getRandomJoke(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
@@ -53,13 +41,8 @@ final class ChuckNorrisController extends BaseController
 
     #[Path('/categories')]
     #[Method('GET')]
-    #[OpenApi('
-      Získá seznam všech dostupných kategorií vtipů.
-
-      Vrací seznam kategorií které lze použít pro filtrování vtipů.
-    ')]
-    #[ApiResponse(code: 200, description: 'Seznam kategorií')]
-    #[ApiResponse(code: 500, description: 'Interní chyba serveru')]
+        #[ApiResponse(code: '200', description: 'Seznam kategorií')]
+    #[ApiResponse(code: '500', description: 'Interní chyba serveru')]
     public function getCategories(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {

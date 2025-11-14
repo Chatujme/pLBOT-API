@@ -4,22 +4,18 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use Apitte\Core\Attribute\Controller\Path;
-use Apitte\Core\Attribute\Controller\Method;
-use Apitte\Core\Attribute\Controller\Tag;
-use Apitte\Core\Attribute\Controller\OpenApi;
-use Apitte\Core\Attribute\Controller\RequestParameter;
-use Apitte\Core\Attribute\Controller\Response as ApiResponse;
+use Apitte\Core\Annotation\Controller\Path;
+use Apitte\Core\Annotation\Controller\Method;
+use Apitte\Core\Annotation\Controller\Tag;
+use Apitte\Core\Annotation\Controller\OpenApi;
+use Apitte\Core\Annotation\Controller\RequestParameter;
+use Apitte\Core\Annotation\Controller\Response as ApiResponse;
 use Apitte\Core\Http\ApiRequest;
 use Apitte\Core\Http\ApiResponse as HttpApiResponse;
 use App\Services\UUIDService;
 
 #[Path('/uuid')]
 #[Tag('Utilities')]
-#[OpenApi('
-  Generování a validace UUID (Universally Unique Identifier).
-  Podporuje generování UUID v4 a validaci existujících UUID.
-')]
 final class UUIDController extends BaseController
 {
     public function __construct(
@@ -30,17 +26,9 @@ final class UUIDController extends BaseController
     #[Path('/')]
     #[Method('GET')]
     #[RequestParameter(name: 'count', type: 'int', in: 'query', required: false, description: 'Počet UUID (1-100, výchozí 1)')]
-    #[OpenApi('
-      Generuje nové UUID v4.
-
-      Příklady:
-      - /uuid/ - jedno UUID
-      - /uuid/?count=5 - pět UUID
-      - /uuid/?count=10 - deset UUID
-    ')]
-    #[ApiResponse(code: 200, description: 'Vygenerované UUID')]
-    #[ApiResponse(code: 400, description: 'Neplatný počet')]
-    #[ApiResponse(code: 500, description: 'Interní chyba serveru')]
+        #[ApiResponse(code: '200', description: 'Vygenerované UUID')]
+    #[ApiResponse(code: '400', description: 'Neplatný počet')]
+    #[ApiResponse(code: '500', description: 'Interní chyba serveru')]
     public function generate(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
@@ -64,14 +52,8 @@ final class UUIDController extends BaseController
     #[Path('/validate/{uuid}')]
     #[Method('GET')]
     #[RequestParameter(name: 'uuid', type: 'string', in: 'path', required: true, description: 'UUID k validaci')]
-    #[OpenApi('
-      Validuje UUID a vrací informace o verzi a variantě.
-
-      Příklad:
-      - /uuid/validate/550e8400-e29b-41d4-a716-446655440000
-    ')]
-    #[ApiResponse(code: 200, description: 'Výsledek validace UUID')]
-    #[ApiResponse(code: 500, description: 'Interní chyba serveru')]
+        #[ApiResponse(code: '200', description: 'Výsledek validace UUID')]
+    #[ApiResponse(code: '500', description: 'Interní chyba serveru')]
     public function validate(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
@@ -85,13 +67,8 @@ final class UUIDController extends BaseController
 
     #[Path('/nil')]
     #[Method('GET')]
-    #[OpenApi('
-      Vrací NIL UUID (všechny nuly).
-
-      NIL UUID je speciální UUID používané jako nulová hodnota.
-    ')]
-    #[ApiResponse(code: 200, description: 'NIL UUID')]
-    #[ApiResponse(code: 500, description: 'Interní chyba serveru')]
+        #[ApiResponse(code: '200', description: 'NIL UUID')]
+    #[ApiResponse(code: '500', description: 'Interní chyba serveru')]
     public function getNil(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
