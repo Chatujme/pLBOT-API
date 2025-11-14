@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pLBOT API - IRC Bot REST API</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            padding: 60px 20px;
+        }
+
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .nav-buttons a {
+            background: white;
+            color: #667eea;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .nav-buttons a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+        }
+
+        .stat-item p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .api-categories {
+            margin-top: 30px;
+        }
+
+        .category {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .category h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .endpoints {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .endpoint {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            border-left: 3px solid #667eea;
+        }
+
+        .endpoint-method {
+            color: #667eea;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: white;
+            margin-top: 50px;
+        }
+
+        .quick-test {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .quick-test h4 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .test-example {
+            background: #2d3748;
+            color: #a0aec0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin-bottom: 10px;
+        }
+
+        .test-example code {
+            color: #68d391;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 pLBOT API</h1>
+            <p>Modernizované REST API pro IRC bota</p>
+        </header>
+
+        <div class="nav-buttons">
+            <a href="explorer.html">🔍 API Explorer</a>
+            <a href="dashboard/">📊 Administrace</a>
+            <a href="#docs">📚 Dokumentace</a>
+        </div>
+
+        <div class="stats-card">
+            <h2>📊 Rychlý přehled</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h3>73</h3>
+                    <p>API Endpointů</p>
+                </div>
+                <div class="stat-item">
+                    <h3>29</h3>
+                    <p>Kategorií služeb</p>
+                </div>
+                <div class="stat-item">
+                    <h3>100%</h3>
+                    <p>Funkční</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <h2>🎯 Rychlý start</h2>
+            <div class="quick-test">
+                <h4>Zkuste hned teď:</h4>
+                <div class="test-example">
+                    <code>curl http://localhost:8080/svatky</code>
+                </div>
+                <div class="test-example">
+                    <code>curl http://localhost:8080/ares/ico/45274649</code>
+                </div>
+                <div class="test-example">
+                    <code>curl http://localhost:8080/cnb/kurzy/USD</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="api-categories">
+            <div class="category">
+                <h3>💼 Business & Finance</h3>
+                <div class="endpoints">
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /ares/ico/{ico}</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /ares/vyhledat</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /cnb/kurzy</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /cnb/prevod</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /crypto/price/{coin}</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /vat/validate</div>
+                </div>
+            </div>
+
+            <div class="category">
+                <h3>🛠️ Utility APIs</h3>
+                <div class="endpoints">
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /qr/generate</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /hash</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /uuid</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /url/shorten</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /hash/base64/encode</div>
+                </div>
+            </div>
+
+            <div class="category">
+                <h3>📊 Data & Information</h3>
+                <div class="endpoints">
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /countries/{country}</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /iss/position</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /news/latest</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /svatky</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /pocasi</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /horoskop/{znameni}</div>
+                </div>
+            </div>
+
+            <div class="category">
+                <h3>🎨 Image Processing</h3>
+                <div class="endpoints">
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /image/resize</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /image/crop</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /image/rotate</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /image/watermark</div>
+                </div>
+            </div>
+
+            <div class="category">
+                <h3>🎲 Fun & Random</h3>
+                <div class="endpoints">
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /advice</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /chucknorris</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /dog</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /fox</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /joke</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span> /trivia</div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>pLBOT API v2.0 | Powered by Nette & Apitte</p>
+            <p style="opacity: 0.8; margin-top: 10px;">73 endpointů | REST API | OpenAPI 3.0</p>
+        </footer>
+    </div>
+</body>
+</html>
