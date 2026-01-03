@@ -26,19 +26,19 @@ final class StatsService
     }
 
     /**
-     * Log API request with response time
+     * Log API request with response time, IP and user agent
      */
-    public function logRequest(string $path, string $method, int $statusCode, float $responseTime): void
+    public function logRequest(string $path, string $method, int $statusCode, float $responseTime, ?string $ipAddress = null, ?string $userAgent = null): void
     {
         try {
             $this->pdo->beginTransaction();
 
             // Insert into request log
             $stmt = $this->pdo->prepare("
-                INSERT INTO stats_requests (path, method, status_code, response_time, created_at)
-                VALUES (?, ?, ?, ?, datetime('now'))
+                INSERT INTO stats_requests (path, method, status_code, response_time, ip_address, user_agent, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
             ");
-            $stmt->execute([$path, $method, $statusCode, $responseTime]);
+            $stmt->execute([$path, $method, $statusCode, $responseTime, $ipAddress, $userAgent]);
 
             // Update or insert endpoint stats
             $isSuccess = $statusCode >= 200 && $statusCode < 400;
@@ -659,5 +659,250 @@ final class StatsService
             $i++;
         }
         return round($bytes, 2) . ' ' . $units[$i];
+    }
+
+    /**
+     * Get statistics by IP address
+     */
+    public function getStatsByIp(): array
+    {
+        try {
+            $stmt = $this->pdo->query("
+                SELECT
+                    ip_address,
+                    COUNT(*) as requests,
+                    COUNT(DISTINCT path) as unique_endpoints,
+                    SUM(CASE WHEN status_code >= 400 THEN 1 ELSE 0 END) as errors,
+                    ROUND(AVG(response_time), 2) as avg_time,
+                    MIN(created_at) as first_seen,
+                    MAX(created_at) as last_seen
+                FROM stats_requests
+                WHERE ip_address IS NOT NULL
+                AND created_at >= datetime('now', '-24 hours')
+                GROUP BY ip_address
+                ORDER BY requests DESC
+                LIMIT 50
+            ");
+
+            $byIp = [];
+            while ($row = $stmt->fetch()) {
+                $byIp[] = [
+                    'ip' => $row['ip_address'],
+                    'requests' => (int) $row['requests'],
+                    'unique_endpoints' => (int) $row['unique_endpoints'],
+                    'errors' => (int) $row['errors'],
+                    'avg_time' => (float) $row['avg_time'],
+                    'first_seen' => $row['first_seen'],
+                    'last_seen' => $row['last_seen'],
+                ];
+            }
+
+            return $byIp;
+
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Get statistics by user agent
+     */
+    public function getStatsByUserAgent(): array
+    {
+        try {
+            $stmt = $this->pdo->query("
+                SELECT
+                    user_agent,
+                    COUNT(*) as requests,
+                    COUNT(DISTINCT ip_address) as unique_ips,
+                    SUM(CASE WHEN status_code >= 400 THEN 1 ELSE 0 END) as errors,
+                    ROUND(AVG(response_time), 2) as avg_time
+                FROM stats_requests
+                WHERE user_agent IS NOT NULL AND user_agent != ''
+                AND created_at >= datetime('now', '-24 hours')
+                GROUP BY user_agent
+                ORDER BY requests DESC
+                LIMIT 50
+            ");
+
+            $byUserAgent = [];
+            while ($row = $stmt->fetch()) {
+                // Parse user agent to get browser/bot info
+                $ua = $row['user_agent'];
+                $parsed = $this->parseUserAgent($ua);
+
+                $byUserAgent[] = [
+                    'user_agent' => $ua,
+                    'browser' => $parsed['browser'],
+                    'type' => $parsed['type'],
+                    'requests' => (int) $row['requests'],
+                    'unique_ips' => (int) $row['unique_ips'],
+                    'errors' => (int) $row['errors'],
+                    'avg_time' => (float) $row['avg_time'],
+                ];
+            }
+
+            return $byUserAgent;
+
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Get requests filtered by IP or user agent
+     */
+    public function getFilteredRequests(?string $ip = null, ?string $userAgent = null, int $limit = 100): array
+    {
+        try {
+            $sql = "
+                SELECT path, method, status_code, response_time, ip_address, user_agent, created_at
+                FROM stats_requests
+                WHERE created_at >= datetime('now', '-24 hours')
+            ";
+            $params = [];
+
+            if ($ip !== null) {
+                $sql .= " AND ip_address = ?";
+                $params[] = $ip;
+            }
+
+            if ($userAgent !== null) {
+                $sql .= " AND user_agent LIKE ?";
+                $params[] = '%' . $userAgent . '%';
+            }
+
+            $sql .= " ORDER BY created_at DESC LIMIT ?";
+            $params[] = $limit;
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+
+            $requests = [];
+            while ($row = $stmt->fetch()) {
+                $requests[] = [
+                    'path' => $row['path'],
+                    'method' => $row['method'],
+                    'status_code' => (int) $row['status_code'],
+                    'response_time' => round((float) $row['response_time'], 2),
+                    'ip' => $row['ip_address'],
+                    'user_agent' => $row['user_agent'],
+                    'created_at' => $row['created_at'],
+                ];
+            }
+
+            return $requests;
+
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Get live stats for SSE
+     */
+    public function getLiveStats(): array
+    {
+        try {
+            // Get stats from last minute
+            $stmt = $this->pdo->query("
+                SELECT COUNT(*) as requests,
+                       SUM(CASE WHEN status_code >= 400 THEN 1 ELSE 0 END) as errors,
+                       ROUND(AVG(response_time), 2) as avg_time
+                FROM stats_requests
+                WHERE created_at >= datetime('now', '-1 minute')
+            ");
+            $lastMinute = $stmt->fetch();
+
+            // Get last 10 requests
+            $stmt = $this->pdo->query("
+                SELECT path, method, status_code, response_time, ip_address, created_at
+                FROM stats_requests
+                ORDER BY created_at DESC
+                LIMIT 10
+            ");
+            $recentRequests = $stmt->fetchAll();
+
+            // Get total stats
+            $stmt = $this->pdo->query("SELECT SUM(requests) as total FROM stats_endpoints");
+            $totalRequests = (int) ($stmt->fetchColumn() ?: 0);
+
+            return [
+                'timestamp' => date('Y-m-d H:i:s'),
+                'last_minute' => [
+                    'requests' => (int) ($lastMinute['requests'] ?? 0),
+                    'errors' => (int) ($lastMinute['errors'] ?? 0),
+                    'avg_time' => (float) ($lastMinute['avg_time'] ?? 0),
+                ],
+                'total_requests' => $totalRequests,
+                'recent_requests' => array_map(function ($row) {
+                    return [
+                        'path' => $row['path'],
+                        'method' => $row['method'],
+                        'status' => (int) $row['status_code'],
+                        'time' => round((float) $row['response_time'], 2),
+                        'ip' => $row['ip_address'],
+                        'when' => $row['created_at'],
+                    ];
+                }, $recentRequests),
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'timestamp' => date('Y-m-d H:i:s'),
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    private function parseUserAgent(string $ua): array
+    {
+        $type = 'unknown';
+        $browser = 'Unknown';
+
+        // Detect bots
+        $bots = [
+            'googlebot' => 'Googlebot',
+            'bingbot' => 'Bingbot',
+            'slurp' => 'Yahoo',
+            'duckduckbot' => 'DuckDuckBot',
+            'baiduspider' => 'Baidu',
+            'yandexbot' => 'Yandex',
+            'facebot' => 'Facebook',
+            'twitterbot' => 'Twitter',
+            'curl' => 'cURL',
+            'wget' => 'Wget',
+            'python' => 'Python',
+            'postman' => 'Postman',
+            'insomnia' => 'Insomnia',
+        ];
+
+        $uaLower = strtolower($ua);
+        foreach ($bots as $pattern => $name) {
+            if (strpos($uaLower, $pattern) !== false) {
+                return ['type' => 'bot', 'browser' => $name];
+            }
+        }
+
+        // Detect browsers
+        if (preg_match('/edg/i', $ua)) {
+            $browser = 'Edge';
+        } elseif (preg_match('/chrome/i', $ua)) {
+            $browser = 'Chrome';
+        } elseif (preg_match('/safari/i', $ua) && !preg_match('/chrome/i', $ua)) {
+            $browser = 'Safari';
+        } elseif (preg_match('/firefox/i', $ua)) {
+            $browser = 'Firefox';
+        } elseif (preg_match('/msie|trident/i', $ua)) {
+            $browser = 'IE';
+        } elseif (preg_match('/opera|opr/i', $ua)) {
+            $browser = 'Opera';
+        }
+
+        if ($browser !== 'Unknown') {
+            $type = 'browser';
+        }
+
+        return ['type' => $type, 'browser' => $browser];
     }
 }

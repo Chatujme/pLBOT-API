@@ -29,7 +29,11 @@ register_shutdown_function(function () use ($container, $startTime, $originalUri
         // Get response code from headers if possible
         $statusCode = http_response_code() ?: 200;
 
-        $statsService->logRequest($cleanPath, $method, $statusCode, $responseTime);
+        // Get client IP and User Agent
+        $ipAddress = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['HTTP_X_REAL_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? null;
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+
+        $statsService->logRequest($cleanPath, $method, $statusCode, $responseTime, $ipAddress, $userAgent);
     } catch (\Throwable $e) {
         // Silent fail - stats are not critical
     }

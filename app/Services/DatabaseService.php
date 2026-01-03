@@ -78,6 +78,8 @@ final class DatabaseService
                 method TEXT NOT NULL,
                 status_code INTEGER,
                 response_time REAL,
+                ip_address TEXT,
+                user_agent TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         ");
@@ -92,6 +94,29 @@ final class DatabaseService
             CREATE INDEX IF NOT EXISTS idx_requests_path
             ON stats_requests(path)
         ");
+
+        $this->pdo->exec("
+            CREATE INDEX IF NOT EXISTS idx_requests_ip
+            ON stats_requests(ip_address)
+        ");
+
+        $this->pdo->exec("
+            CREATE INDEX IF NOT EXISTS idx_requests_user_agent
+            ON stats_requests(user_agent)
+        ");
+
+        // Add columns if they don't exist (migration for existing databases)
+        try {
+            $this->pdo->exec("ALTER TABLE stats_requests ADD COLUMN ip_address TEXT");
+        } catch (\PDOException $e) {
+            // Column already exists
+        }
+
+        try {
+            $this->pdo->exec("ALTER TABLE stats_requests ADD COLUMN user_agent TEXT");
+        } catch (\PDOException $e) {
+            // Column already exists
+        }
 
         // Users table for authentication
         $this->pdo->exec("

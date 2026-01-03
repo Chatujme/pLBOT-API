@@ -257,6 +257,92 @@ final class AdminController extends BaseController
         }
     }
 
+    #[Path('/stats/by-ip')]
+    #[Method('GET')]
+    public function getStatsByIp(ApiRequest $request, ApiResponse $response): ApiResponse
+    {
+        try {
+            $stats = $this->statsService->getStatsByIp();
+
+            return $this->createSuccessResponse($response, [
+                'by_ip' => $stats,
+                'total_unique_ips' => count($stats),
+            ]);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse(
+                $response,
+                'Failed to get IP stats: ' . $e->getMessage(),
+                500
+            );
+        }
+    }
+
+    #[Path('/stats/by-user-agent')]
+    #[Method('GET')]
+    public function getStatsByUserAgent(ApiRequest $request, ApiResponse $response): ApiResponse
+    {
+        try {
+            $stats = $this->statsService->getStatsByUserAgent();
+
+            return $this->createSuccessResponse($response, [
+                'by_user_agent' => $stats,
+                'total_unique_agents' => count($stats),
+            ]);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse(
+                $response,
+                'Failed to get user agent stats: ' . $e->getMessage(),
+                500
+            );
+        }
+    }
+
+    #[Path('/stats/requests')]
+    #[Method('GET')]
+    public function getFilteredRequests(ApiRequest $request, ApiResponse $response): ApiResponse
+    {
+        try {
+            $ip = $request->getQueryParam('ip');
+            $userAgent = $request->getQueryParam('user_agent');
+            $limit = (int) ($request->getQueryParam('limit') ?? 100);
+
+            $requests = $this->statsService->getFilteredRequests($ip, $userAgent, min($limit, 500));
+
+            return $this->createSuccessResponse($response, [
+                'requests' => $requests,
+                'count' => count($requests),
+                'filters' => [
+                    'ip' => $ip,
+                    'user_agent' => $userAgent,
+                    'limit' => $limit,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse(
+                $response,
+                'Failed to get filtered requests: ' . $e->getMessage(),
+                500
+            );
+        }
+    }
+
+    #[Path('/stats/live')]
+    #[Method('GET')]
+    public function getLiveStats(ApiRequest $request, ApiResponse $response): ApiResponse
+    {
+        try {
+            $stats = $this->statsService->getLiveStats();
+
+            return $this->createSuccessResponse($response, $stats);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse(
+                $response,
+                'Failed to get live stats: ' . $e->getMessage(),
+                500
+            );
+        }
+    }
+
     #[Path('/change-password')]
     #[Method('POST')]
     public function changePassword(ApiRequest $request, ApiResponse $response): ApiResponse

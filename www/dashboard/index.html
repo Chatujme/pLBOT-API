@@ -750,6 +750,8 @@
             <button class="nav-tab active" onclick="showTab('overview')"><i class="fas fa-chart-line"></i> Přehled</button>
             <button class="nav-tab" onclick="showTab('latency')"><i class="fas fa-tachometer-alt"></i> Latence</button>
             <button class="nav-tab" onclick="showTab('errors')"><i class="fas fa-exclamation-triangle"></i> Chyby</button>
+            <button class="nav-tab" onclick="showTab('clients')"><i class="fas fa-users"></i> Klienti</button>
+            <button class="nav-tab" onclick="showTab('live')"><i class="fas fa-broadcast-tower"></i> Live</button>
             <button class="nav-tab" onclick="showTab('health')"><i class="fas fa-heartbeat"></i> Health</button>
         </div>
 
@@ -849,6 +851,131 @@
                                 <div class="empty-state">
                                     <i class="fas fa-spinner fa-spin"></i>
                                     <p>Načítání dat...</p>
+                                </div>
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clients Tab -->
+        <div id="tab-clients" class="tab-content">
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h3><i class="fas fa-network-wired"></i> Požadavky podle IP adresy (24h)</h3>
+                        <button class="refresh-button" onclick="loadClientStats()">
+                            <i class="fas fa-sync-alt"></i> Obnovit
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>IP Adresa</th>
+                                    <th>Požadavky</th>
+                                    <th>Endpointy</th>
+                                    <th>Chyby</th>
+                                    <th>Avg Time</th>
+                                    <th>Poslední</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ipStatsBody">
+                                <tr><td colspan="6">
+                                    <div class="empty-state">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <p>Načítání dat...</p>
+                                    </div>
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3><i class="fas fa-browser"></i> Požadavky podle User Agent (24h)</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Typ</th>
+                                <th>Browser/Bot</th>
+                                <th>Požadavky</th>
+                                <th>Unikátní IP</th>
+                                <th>Chyby</th>
+                                <th>Avg Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="uaStatsBody">
+                            <tr><td colspan="6">
+                                <div class="empty-state">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Načítání dat...</p>
+                                </div>
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Tab (SSE) -->
+        <div id="tab-live" class="tab-content">
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3><i class="fas fa-broadcast-tower"></i> Real-time Feed (SSE)</h3>
+                    <span id="sseStatus" class="health-badge unknown">
+                        <i class="fas fa-plug"></i> Nepřipojeno
+                    </span>
+                </div>
+
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <div class="value" id="live-requests">0</div>
+                        <div class="label">Požadavky/min</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="value" id="live-errors">0</div>
+                        <div class="label">Chyby/min</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="value" id="live-avg">0 ms</div>
+                        <div class="label">Avg Time</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="value" id="live-total">0</div>
+                        <div class="label">Celkem</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <button class="refresh-button" id="sseConnectBtn" onclick="toggleSSE()">
+                        <i class="fas fa-play"></i> Připojit Live
+                    </button>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3><i class="fas fa-stream"></i> Poslední požadavky (Live)</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Čas</th>
+                                <th>Endpoint</th>
+                                <th>Metoda</th>
+                                <th>Status</th>
+                                <th>Čas odezvy</th>
+                                <th>IP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="liveRequestsBody">
+                            <tr><td colspan="6">
+                                <div class="empty-state">
+                                    <i class="fas fa-plug"></i>
+                                    <p>Připojte se k SSE pro zobrazení živých dat</p>
                                 </div>
                             </td></tr>
                         </tbody>
@@ -964,6 +1091,10 @@
         let errorTrendChart = null;
         let errorByStatusChart = null;
 
+        // SSE connection
+        let eventSource = null;
+        let sseConnected = false;
+
         // Tab navigation
         function showTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -975,6 +1106,10 @@
             if (tabName === 'latency') loadLatencyStats();
             if (tabName === 'errors') loadErrorStats();
             if (tabName === 'health') loadHealthStats();
+            if (tabName === 'clients') loadClientStats();
+            if (tabName === 'live' && !sseConnected) {
+                // Auto-connect SSE when opening Live tab
+            }
         }
 
         async function loadStats() {
@@ -1310,6 +1445,202 @@
             loadLatencyStats();
             loadErrorStats();
             loadHealthStats();
+            loadClientStats();
+        }
+
+        async function loadClientStats() {
+            try {
+                // Load IP stats
+                const ipResponse = await fetch('../admin/stats/by-ip');
+                const ipData = await ipResponse.json();
+
+                const ipBody = document.getElementById('ipStatsBody');
+                if (ipData.by_ip && ipData.by_ip.length > 0) {
+                    ipBody.innerHTML = ipData.by_ip.map(ip => `
+                        <tr>
+                            <td><code>${ip.ip || 'unknown'}</code></td>
+                            <td><strong>${ip.requests}</strong></td>
+                            <td>${ip.unique_endpoints}</td>
+                            <td>${ip.errors > 0 ? `<span style="color: var(--accent-danger);">${ip.errors}</span>` : '0'}</td>
+                            <td><span class="time-badge">${Math.round(ip.avg_time)} ms</span></td>
+                            <td>${ip.last_seen ? new Date(ip.last_seen).toLocaleTimeString('cs-CZ') : '-'}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    ipBody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>Žádná data</p></div></td></tr>';
+                }
+
+                // Load User Agent stats
+                const uaResponse = await fetch('../admin/stats/by-user-agent');
+                const uaData = await uaResponse.json();
+
+                const uaBody = document.getElementById('uaStatsBody');
+                if (uaData.by_user_agent && uaData.by_user_agent.length > 0) {
+                    uaBody.innerHTML = uaData.by_user_agent.map(ua => {
+                        const typeClass = ua.type === 'bot' ? 'accent-warning' : (ua.type === 'browser' ? 'accent-success' : 'text-muted');
+                        const typeIcon = ua.type === 'bot' ? 'robot' : (ua.type === 'browser' ? 'globe' : 'question');
+                        return `
+                        <tr>
+                            <td><i class="fas fa-${typeIcon}" style="color: var(--${typeClass});"></i> ${ua.type}</td>
+                            <td><strong>${ua.browser}</strong></td>
+                            <td><strong>${ua.requests}</strong></td>
+                            <td>${ua.unique_ips}</td>
+                            <td>${ua.errors > 0 ? `<span style="color: var(--accent-danger);">${ua.errors}</span>` : '0'}</td>
+                            <td><span class="time-badge">${Math.round(ua.avg_time)} ms</span></td>
+                        </tr>
+                    `}).join('');
+                } else {
+                    uaBody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>Žádná data</p></div></td></tr>';
+                }
+            } catch (error) {
+                console.error('Failed to load client stats:', error);
+            }
+        }
+
+        // Live update functions (polling fallback for environments where SSE doesn't work)
+        let pollingInterval = null;
+        let usePolling = true; // Default to polling for better Windows compatibility
+
+        function toggleSSE() {
+            if (sseConnected) {
+                disconnectSSE();
+            } else {
+                if (usePolling) {
+                    connectPolling();
+                } else {
+                    connectSSE();
+                }
+            }
+        }
+
+        function connectPolling() {
+            console.log('Live: Starting polling mode');
+            sseConnected = true;
+            updateSSEStatus('connected');
+            document.getElementById('sseConnectBtn').innerHTML = '<i class="fas fa-stop"></i> Zastavit Live';
+
+            // Initial fetch
+            fetchLiveStats();
+
+            // Poll every 2 seconds
+            pollingInterval = setInterval(fetchLiveStats, 2000);
+        }
+
+        async function fetchLiveStats() {
+            try {
+                const response = await fetch('../admin/stats/live');
+                const result = await response.json();
+
+                if (!result.error) {
+                    updateLiveStats(result);
+                }
+            } catch (error) {
+                console.error('Live stats fetch error:', error);
+            }
+        }
+
+        function connectSSE() {
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            const sseUrl = '../sse.php';
+            console.log('SSE: Connecting to', sseUrl);
+            eventSource = new EventSource(sseUrl);
+
+            eventSource.onopen = function() {
+                console.log('SSE: Connection opened');
+            };
+
+            eventSource.addEventListener('connected', function(e) {
+                console.log('SSE connected:', JSON.parse(e.data));
+                sseConnected = true;
+                updateSSEStatus('connected');
+                document.getElementById('sseConnectBtn').innerHTML = '<i class="fas fa-stop"></i> Odpojit SSE';
+            });
+
+            eventSource.addEventListener('ready', function(e) {
+                console.log('SSE ready:', JSON.parse(e.data));
+            });
+
+            eventSource.addEventListener('stats', function(e) {
+                const data = JSON.parse(e.data);
+                updateLiveStats(data);
+            });
+
+            eventSource.addEventListener('fullStats', function(e) {
+                const data = JSON.parse(e.data);
+                document.getElementById('live-total').textContent = data.totalRequests.toLocaleString('cs-CZ');
+            });
+
+            eventSource.addEventListener('heartbeat', function(e) {
+                // Keep alive
+            });
+
+            eventSource.addEventListener('error', function(e) {
+                console.error('SSE error:', e);
+                updateSSEStatus('error');
+            });
+
+            eventSource.addEventListener('reconnect', function(e) {
+                disconnectSSE();
+                setTimeout(connectSSE, 1000);
+            });
+
+            eventSource.onerror = function(e) {
+                if (eventSource.readyState === EventSource.CLOSED) {
+                    updateSSEStatus('disconnected');
+                    sseConnected = false;
+                    document.getElementById('sseConnectBtn').innerHTML = '<i class="fas fa-play"></i> Připojit SSE';
+                }
+            };
+        }
+
+        function disconnectSSE() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+            sseConnected = false;
+            updateSSEStatus('disconnected');
+            document.getElementById('sseConnectBtn').innerHTML = '<i class="fas fa-play"></i> Připojit Live';
+        }
+
+        function updateSSEStatus(status) {
+            const badge = document.getElementById('sseStatus');
+            const icons = { connected: 'check-circle', disconnected: 'plug', error: 'exclamation-triangle' };
+            const labels = { connected: 'Připojeno', disconnected: 'Nepřipojeno', error: 'Chyba' };
+            const classes = { connected: 'healthy', disconnected: 'unknown', error: 'critical' };
+            badge.className = `health-badge ${classes[status]}`;
+            badge.innerHTML = `<i class="fas fa-${icons[status]}"></i> ${labels[status]}`;
+        }
+
+        function updateLiveStats(data) {
+            document.getElementById('live-requests').textContent = data.last_minute.requests;
+            document.getElementById('live-errors').textContent = data.last_minute.errors;
+            document.getElementById('live-avg').textContent = Math.round(data.last_minute.avg_time || 0) + ' ms';
+            document.getElementById('live-total').textContent = data.total_requests.toLocaleString('cs-CZ');
+
+            // Update live requests table
+            const tbody = document.getElementById('liveRequestsBody');
+            if (data.recent_requests && data.recent_requests.length > 0) {
+                tbody.innerHTML = data.recent_requests.map(req => {
+                    const statusClass = req.status >= 400 ? 'accent-danger' : 'accent-success';
+                    return `
+                    <tr>
+                        <td>${req.when ? new Date(req.when).toLocaleTimeString('cs-CZ') : '-'}</td>
+                        <td><span class="endpoint-path">${req.path}</span></td>
+                        <td><span class="method-badge method-${req.method.toLowerCase()}">${req.method}</span></td>
+                        <td><span style="color: var(--${statusClass});">${req.status}</span></td>
+                        <td><span class="time-badge">${Math.round(req.time)} ms</span></td>
+                        <td><code>${req.ip || '-'}</code></td>
+                    </tr>
+                `}).join('');
+            }
         }
 
         function showEmptyState() {

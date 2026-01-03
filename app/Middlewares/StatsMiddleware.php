@@ -26,6 +26,10 @@ final class StatsMiddleware implements MiddlewareInterface
         $path = $request->getUri()->getPath();
         $method = $request->getMethod();
 
+        // Get client info
+        $ipAddress = $this->getClientIp($request);
+        $userAgent = $request->getHeaderLine('User-Agent') ?: null;
+
         // Process request
         $response = $handler->handle($request);
 
@@ -38,12 +42,38 @@ final class StatsMiddleware implements MiddlewareInterface
                 $path,
                 $method,
                 $response->getStatusCode(),
-                $responseTime
+                $responseTime,
+                $ipAddress,
+                $userAgent
             );
         } catch (\Exception $e) {
             // Ignore stats errors - they shouldn't affect API responses
         }
 
         return $response;
+    }
+
+    private function getClientIp(ServerRequestInterface $request): ?string
+    {
+        // Check for forwarded headers (proxy/load balancer)
+        $headers = [
+            'X-Forwarded-For',
+            'X-Real-IP',
+            'CF-Connecting-IP', // Cloudflare
+            'True-Client-IP',
+        ];
+
+        foreach ($headers as $header) {
+            $value = $request->getHeaderLine($header);
+            if (!empty($value)) {
+                // X-Forwarded-For can contain multiple IPs, get the first one
+                $ips = explode(',', $value);
+                return trim($ips[0]);
+            }
+        }
+
+        // Fall back to server params
+        $serverParams = $request->getServerParams();
+        return $serverParams['REMOTE_ADDR'] ?? null;
     }
 }
