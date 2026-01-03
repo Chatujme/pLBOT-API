@@ -175,6 +175,16 @@
             color: var(--accent-success);
         }
 
+        .method-put {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-warning);
+        }
+
+        .method-delete {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-danger);
+        }
+
         .api-path {
             font-family: 'Courier New', monospace;
             font-size: 1.1em;
@@ -293,6 +303,10 @@
             color: var(--accent-success);
         }
 
+        .response-area.error h5 i {
+            color: var(--accent-danger);
+        }
+
         .response-area pre {
             background: var(--bg-primary);
             color: var(--accent-success);
@@ -302,6 +316,11 @@
             font-family: 'Courier New', monospace;
             font-size: 14px;
             border: 1px solid var(--border-color);
+            max-height: 400px;
+        }
+
+        .response-area.error pre {
+            color: var(--accent-danger);
         }
 
         .loading {
@@ -328,36 +347,6 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-        }
-
-        .example-response {
-            background: var(--bg-tertiary);
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            border: 1px solid var(--border-color);
-        }
-
-        .example-response h5 {
-            margin-bottom: 10px;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .example-response h5 i {
-            color: var(--accent-warning);
-        }
-
-        .example-response pre {
-            background: var(--bg-primary);
-            color: var(--text-secondary);
-            padding: 15px;
-            border-radius: 6px;
-            overflow-x: auto;
-            font-size: 13px;
-            border: 1px solid var(--border-color);
         }
 
         .tag {
@@ -399,12 +388,46 @@
         .endpoint-count strong {
             color: var(--text-primary);
         }
+
+        .loading-endpoints {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .loading-endpoints .spinner {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 20px;
+        }
+
+        .response-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .response-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--text-muted);
+        }
+
+        .response-meta .status-ok {
+            color: var(--accent-success);
+        }
+
+        .response-meta .status-error {
+            color: var(--accent-danger);
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="header-content">
-            <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Zpět</a>
+            <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Zpet</a>
             <h1><i class="fas fa-compass"></i> API Explorer</h1>
         </div>
     </div>
@@ -413,243 +436,90 @@
         <div class="search-box">
             <div class="search-input-wrapper">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Hledat endpoint... (např. 'svatky', 'ares', 'qr')" />
+                <input type="text" id="searchInput" placeholder="Hledat endpoint... (napr. 'svatky', 'ares', 'qr')" />
             </div>
         </div>
 
         <div class="endpoint-count" id="endpointCount">
             <i class="fas fa-list"></i>
-            Zobrazeno <strong id="visibleCount">0</strong> z <strong id="totalCount">0</strong> endpointů
+            Zobrazeno <strong id="visibleCount">0</strong> z <strong id="totalCount">0</strong> endpointu
         </div>
 
-        <div class="api-list" id="apiList"></div>
+        <div class="api-list" id="apiList">
+            <div class="loading-endpoints">
+                <div class="spinner"></div>
+                <p>Nacitani endpointu z OpenAPI specifikace...</p>
+            </div>
+        </div>
     </div>
 
     <script>
-        const endpoints = [
-            {
-                method: 'GET',
-                path: '/svatky',
-                description: 'Získá informace o českých svátcích (předevčírem, včera, dnes, zítra)',
-                tags: ['Czech', 'Data'],
-                params: [],
-                example: {
-                    "data": {
-                        "predevcirem": "Benedikt",
-                        "vcera": "Tibor",
-                        "dnes": "Sáva",
-                        "zitra": "Leopold"
-                    }
-                }
-            },
-            {
-                method: 'GET',
-                path: '/ares/ico/{ico}',
-                description: 'Vyhledá firmu v registru ARES podle IČO',
-                tags: ['Business', 'Czech'],
-                params: [
-                    { name: 'ico', type: 'path', required: true, description: 'IČO firmy (8 číslic)', example: '45274649' }
-                ],
-                example: {
-                    "data": {
-                        "ico": "45274649",
-                        "dic": "CZ45274649",
-                        "obchodni_jmeno": "ČEZ, a. s.",
-                        "adresa": "Duhová 1444/2, Michle, 14000 Praha 4"
-                    }
-                }
-            },
-            {
-                method: 'GET',
-                path: '/cnb/kurzy/{mena}',
-                description: 'Získá aktuální kurz měny z ČNB',
-                tags: ['Finance', 'Czech'],
-                params: [
-                    { name: 'mena', type: 'path', required: true, description: 'Kód měny (USD, EUR, ...)', example: 'USD' }
-                ],
-                example: {
-                    "data": {
-                        "zeme": "USA",
-                        "mena": "dolar",
-                        "kod": "USD",
-                        "kurz": 20.817
-                    }
-                }
-            },
-            {
-                method: 'GET',
-                path: '/qr/generate',
-                description: 'Generuje QR kód z textu',
-                tags: ['Utility'],
-                params: [
-                    { name: 'data', type: 'query', required: true, description: 'Text pro QR kód', example: 'Hello World' },
-                    { name: 'size', type: 'query', required: false, description: 'Velikost QR kódu (100-1000)', example: '300' }
-                ],
-                example: {
-                    "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
-                }
-            },
-            {
-                method: 'GET',
-                path: '/uuid',
-                description: 'Generuje náhodný UUID v4',
-                tags: ['Utility'],
-                params: [],
-                example: {
-                    "data": {
-                        "uuid": "ccabde79-396e-47ae-9cd2-f7cea93d96d2",
-                        "version": 4,
-                        "variant": "RFC 4122"
-                    }
-                }
-            },
-            {
-                method: 'GET',
-                path: '/dog',
-                description: 'Vrátí náhodný obrázek psa',
-                tags: ['Fun', 'Random'],
-                params: [],
-                example: {
-                    "data": {
-                        "image_url": "https://images.dog.ceo/breeds/finnish-lapphund/mochilamvan.jpg",
-                        "breed": "random"
-                    }
-                }
-            },
-            {
-                method: 'GET',
-                path: '/advice',
-                description: 'Vrátí náhodnou radu',
-                tags: ['Fun', 'Random'],
-                params: [],
-                example: {
-                    "data": {
-                        "id": 76,
-                        "advice": "You will always regret the round of Jägermeister."
-                    }
-                }
-            },
-            {
-                method: 'GET',
-                path: '/countries/{country}',
-                description: 'Získá detailní informace o zemi',
-                tags: ['Data', 'Information'],
-                params: [
-                    { name: 'country', type: 'path', required: true, description: 'Kód země (cz, us, ...)', example: 'cz' }
-                ],
-                example: {
-                    "data": {
-                        "name": "Czechia",
-                        "capital": "Prague",
-                        "population": 10882341,
-                        "currencies": {
-                            "CZK": {
-                                "symbol": "Kč",
-                                "name": "Czech koruna"
-                            }
+        const API_BASE = '';
+        let endpoints = [];
+
+        async function loadEndpoints() {
+            try {
+                const response = await fetch(API_BASE + '/openapi/spec');
+                const spec = await response.json();
+
+                endpoints = [];
+
+                for (const [path, methods] of Object.entries(spec.paths || {})) {
+                    for (const [method, details] of Object.entries(methods)) {
+                        if (['get', 'post', 'put', 'delete'].includes(method)) {
+                            const params = [];
+
+                            // Extract path parameters
+                            const pathParams = path.match(/\{(\w+)\}/g) || [];
+                            pathParams.forEach(p => {
+                                const name = p.replace(/[{}]/g, '');
+                                const paramDef = (details.parameters || []).find(param => param.name === name);
+                                params.push({
+                                    name: name,
+                                    type: 'path',
+                                    required: true,
+                                    description: paramDef?.description || `Path parameter: ${name}`,
+                                    example: paramDef?.example || paramDef?.schema?.example || ''
+                                });
+                            });
+
+                            // Extract query parameters
+                            (details.parameters || []).forEach(param => {
+                                if (param.in === 'query') {
+                                    params.push({
+                                        name: param.name,
+                                        type: 'query',
+                                        required: param.required || false,
+                                        description: param.description || `Query parameter: ${param.name}`,
+                                        example: param.example || param.schema?.example || ''
+                                    });
+                                }
+                            });
+
+                            endpoints.push({
+                                method: method.toUpperCase(),
+                                path: path,
+                                description: details.summary || details.description || '',
+                                tags: details.tags || ['Other'],
+                                params: params
+                            });
                         }
                     }
                 }
-            },
-            {
-                method: 'GET',
-                path: '/hash',
-                description: 'Vytvoří hash z textu pomocí vybraného algoritmu',
-                tags: ['Utility', 'Crypto'],
-                params: [
-                    { name: 'data', type: 'query', required: true, description: 'Text k zahashování', example: 'hello' },
-                    { name: 'algorithm', type: 'query', required: true, description: 'Algoritmus (md5, sha1, sha256, ...)', example: 'sha256' }
-                ],
-                example: {
-                    "data": {
-                        "algorithm": "sha256",
-                        "hash": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
-                    }
-                }
-            },
-            {
-                method: 'GET',
-                path: '/pocasi',
-                description: 'Vrátí aktuální počasí pro zadané město',
-                tags: ['Weather', 'Czech'],
-                params: [
-                    { name: 'mesto', type: 'query', required: true, description: 'Název města', example: 'Praha' }
-                ],
-                example: {
-                    "data": {
-                        "mesto": "Praha",
-                        "teplota": 15,
-                        "popis": "Zataženo"
-                    }
-                }
-            },
-            {
-                method: 'GET',
-                path: '/fox',
-                description: 'Vrátí náhodný obrázek lišky',
-                tags: ['Fun', 'Random'],
-                params: [],
-                example: {
-                    "data": {
-                        "image_url": "https://randomfox.ca/images/12.jpg"
-                    }
-                }
-            },
-            {
-                method: 'GET',
-                path: '/chucknorris',
-                description: 'Vrátí náhodný vtip o Chucku Norrisovi',
-                tags: ['Fun', 'Random'],
-                params: [],
-                example: {
-                    "data": {
-                        "joke": "Chuck Norris can divide by zero."
-                    }
-                }
-            },
-            {
-                method: 'GET',
-                path: '/joke',
-                description: 'Vrátí náhodný vtip',
-                tags: ['Fun', 'Random'],
-                params: [],
-                example: {
-                    "data": {
-                        "setup": "Why did the scarecrow win an award?",
-                        "punchline": "Because he was outstanding in his field."
-                    }
-                }
-            },
-            {
-                method: 'GET',
-                path: '/trivia',
-                description: 'Vrátí náhodnou trivia otázku',
-                tags: ['Fun', 'Quiz'],
-                params: [],
-                example: {
-                    "data": {
-                        "question": "What is the capital of France?",
-                        "answer": "Paris"
-                    }
-                }
-            },
-            {
-                method: 'GET',
-                path: '/crypto/price/{coin}',
-                description: 'Vrátí aktuální cenu kryptoměny',
-                tags: ['Finance', 'Crypto'],
-                params: [
-                    { name: 'coin', type: 'path', required: true, description: 'ID kryptoměny (bitcoin, ethereum, ...)', example: 'bitcoin' }
-                ],
-                example: {
-                    "data": {
-                        "id": "bitcoin",
-                        "symbol": "btc",
-                        "price_usd": 42000.50
-                    }
-                }
+
+                // Sort by path
+                endpoints.sort((a, b) => a.path.localeCompare(b.path));
+
+                renderEndpoints();
+            } catch (error) {
+                document.getElementById('apiList').innerHTML = `
+                    <div class="loading-endpoints">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3em; color: var(--accent-danger); margin-bottom: 20px;"></i>
+                        <p>Chyba pri nacitani OpenAPI specifikace: ${error.message}</p>
+                    </div>
+                `;
             }
-        ];
+        }
 
         function renderEndpoints(filter = '') {
             const apiList = document.getElementById('apiList');
@@ -662,8 +532,18 @@
             document.getElementById('visibleCount').textContent = filtered.length;
             document.getElementById('totalCount').textContent = endpoints.length;
 
+            if (filtered.length === 0) {
+                apiList.innerHTML = `
+                    <div class="loading-endpoints">
+                        <i class="fas fa-search" style="font-size: 3em; color: var(--text-muted); margin-bottom: 20px;"></i>
+                        <p>Zadne endpointy neodpovidaji vyhledavani</p>
+                    </div>
+                `;
+                return;
+            }
+
             apiList.innerHTML = filtered.map((endpoint, index) => `
-                <div class="api-item" id="api-${index}">
+                <div class="api-item" id="api-${index}" data-index="${index}">
                     <div class="api-header" onclick="toggleEndpoint(${index})">
                         <div style="flex: 1;">
                             <span class="api-method method-${endpoint.method.toLowerCase()}">${endpoint.method}</span>
@@ -678,38 +558,34 @@
 
                     <div class="api-details">
                         <div class="try-it">
-                            <h4><i class="fas fa-flask"></i> Vyzkoušejte</h4>
-                            ${endpoint.params.map(param => `
+                            <h4><i class="fas fa-flask"></i> Vyzkouste</h4>
+                            ${endpoint.params.length > 0 ? endpoint.params.map(param => `
                                 <div class="param-input">
-                                    <label>${param.name} ${param.required ? '<span style="color: var(--accent-danger)">*</span>' : '(volitelné)'}</label>
+                                    <label>${param.name} ${param.required ? '<span style="color: var(--accent-danger)">*</span>' : '(volitelne)'}</label>
                                     <input
                                         type="text"
                                         id="param-${index}-${param.name}"
-                                        placeholder="${param.example}"
-                                        value="${param.example}"
+                                        placeholder="${param.example || param.name}"
+                                        value="${param.example || ''}"
                                     />
                                     <small><i class="fas fa-info-circle"></i> ${param.description}</small>
                                 </div>
-                            `).join('')}
+                            `).join('') : '<p style="color: var(--text-muted); margin-bottom: 15px;"><i class="fas fa-info-circle"></i> Tento endpoint nevyzaduje zadne parametry</p>'}
 
-                            <button class="try-button" onclick="tryEndpoint(${index})">
-                                <i class="fas fa-paper-plane"></i> Odeslat požadavek
+                            <button class="try-button" onclick="tryEndpoint(${index}, event)">
+                                <i class="fas fa-paper-plane"></i> Odeslat pozadavek
                             </button>
 
                             <div class="loading" id="loading-${index}">
                                 <div class="spinner"></div>
-                                <p>Načítání...</p>
+                                <p>Nacitani...</p>
                             </div>
 
                             <div class="response-area" id="response-${index}">
-                                <h5><i class="fas fa-check-circle"></i> Odpověď:</h5>
+                                <div class="response-meta" id="response-meta-${index}"></div>
+                                <h5><i class="fas fa-check-circle"></i> Odpoved:</h5>
                                 <pre id="response-data-${index}"></pre>
                             </div>
-                        </div>
-
-                        <div class="example-response">
-                            <h5><i class="fas fa-file-code"></i> Příklad odpovědi</h5>
-                            <pre>${JSON.stringify(endpoint.example, null, 2)}</pre>
                         </div>
                     </div>
                 </div>
@@ -721,18 +597,20 @@
             item.classList.toggle('expanded');
         }
 
-        async function tryEndpoint(index) {
-            const endpoint = endpoints.filter((ep, i) =>
-                document.getElementById(`api-${i}`) !== null
-            )[index];
+        async function tryEndpoint(index, event) {
+            event.stopPropagation();
 
-            let url = endpoint.path;
+            const endpoint = endpoints[index];
+            if (!endpoint) return;
+
+            let url = API_BASE + endpoint.path;
             const params = new URLSearchParams();
 
             endpoint.params.forEach(param => {
-                const value = document.getElementById(`param-${index}-${param.name}`).value;
+                const inputEl = document.getElementById(`param-${index}-${param.name}`);
+                const value = inputEl ? inputEl.value : '';
                 if (param.type === 'path') {
-                    url = url.replace(`{${param.name}}`, value);
+                    url = url.replace(`{${param.name}}`, encodeURIComponent(value));
                 } else if (param.type === 'query' && value) {
                     params.append(param.name, value);
                 }
@@ -745,19 +623,62 @@
             const loading = document.getElementById(`loading-${index}`);
             const responseArea = document.getElementById(`response-${index}`);
             const responseData = document.getElementById(`response-data-${index}`);
+            const responseMeta = document.getElementById(`response-meta-${index}`);
 
             loading.classList.add('show');
             responseArea.classList.remove('show');
+            responseArea.classList.remove('error');
+
+            const startTime = performance.now();
 
             try {
-                const response = await fetch(url);
-                const data = await response.json();
+                const response = await fetch(url, {
+                    method: endpoint.method,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
 
-                responseData.textContent = JSON.stringify(data, null, 2);
+                const duration = Math.round(performance.now() - startTime);
+                const contentType = response.headers.get('content-type') || '';
+
+                let data;
+                let displayText;
+
+                if (contentType.includes('application/json')) {
+                    data = await response.json();
+                    displayText = JSON.stringify(data, null, 2);
+                } else if (contentType.includes('image')) {
+                    displayText = `[Obrazek: ${contentType}]\nURL: ${url}`;
+                } else {
+                    displayText = await response.text();
+                    if (displayText.length > 5000) {
+                        displayText = displayText.substring(0, 5000) + '\n... (zkraceno)';
+                    }
+                }
+
+                const statusClass = response.ok ? 'status-ok' : 'status-error';
+                responseMeta.innerHTML = `
+                    <span class="${statusClass}"><i class="fas fa-circle"></i> HTTP ${response.status}</span>
+                    <span><i class="fas fa-clock"></i> ${duration} ms</span>
+                    <span><i class="fas fa-file"></i> ${contentType.split(';')[0]}</span>
+                `;
+
+                if (!response.ok) {
+                    responseArea.classList.add('error');
+                }
+
+                responseData.textContent = displayText;
                 responseArea.classList.add('show');
             } catch (error) {
+                const duration = Math.round(performance.now() - startTime);
+                responseMeta.innerHTML = `
+                    <span class="status-error"><i class="fas fa-times-circle"></i> Error</span>
+                    <span><i class="fas fa-clock"></i> ${duration} ms</span>
+                `;
                 responseData.textContent = `Chyba: ${error.message}`;
                 responseArea.classList.add('show');
+                responseArea.classList.add('error');
             } finally {
                 loading.classList.remove('show');
             }
@@ -767,7 +688,8 @@
             renderEndpoints(e.target.value);
         });
 
-        renderEndpoints();
+        // Load endpoints on page load
+        loadEndpoints();
     </script>
 </body>
 </html>
