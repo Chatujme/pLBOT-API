@@ -454,7 +454,10 @@
     </div>
 
     <script>
-        const API_BASE = '';
+        // Detect base path from current location
+        const currentPath = window.location.pathname;
+        const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+        const API_BASE = basePath;
         let endpoints = [];
 
         async function loadEndpoints() {
