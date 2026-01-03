@@ -416,6 +416,30 @@
             border-color: var(--accent-danger);
             color: white;
         }
+
+        .time-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-family: 'Courier New', monospace;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+
+        .time-badge.time-min {
+            color: var(--accent-success);
+        }
+
+        .time-badge.time-max {
+            color: var(--accent-warning);
+        }
+
+        .success-rate {
+            margin-left: 6px;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
     </style>
 </head>
 <body>
@@ -495,12 +519,15 @@
                             <th>#</th>
                             <th>Endpoint</th>
                             <th>Metoda</th>
-                            <th>Počet požadavků</th>
-                            <th>Využití</th>
+                            <th>Požadavky</th>
+                            <th>Avg</th>
+                            <th>Min</th>
+                            <th>Max</th>
+                            <th>Stav</th>
                         </tr>
                     </thead>
                     <tbody id="topEndpointsBody">
-                        <tr><td colspan="5">
+                        <tr><td colspan="8">
                             <div class="empty-state">
                                 <i class="fas fa-spinner fa-spin"></i>
                                 <p>Načítání dat...</p>
@@ -565,23 +592,26 @@
 
                 const tbody = document.getElementById('topEndpointsBody');
                 if (data.topEndpoints && data.topEndpoints.length > 0) {
-                    tbody.innerHTML = data.topEndpoints.map((ep, index) => `
+                    tbody.innerHTML = data.topEndpoints.map((ep, index) => {
+                        const successRate = ep.requests > 0 ? Math.round((ep.success / ep.requests) * 100) : 100;
+                        const statusClass = successRate >= 99 ? 'status-ok' : (successRate >= 90 ? 'status-warning' : 'status-error');
+                        return `
                         <tr>
                             <td><strong>${index + 1}</strong></td>
                             <td><span class="endpoint-path">${ep.path}</span></td>
                             <td><span class="method-badge method-${ep.method.toLowerCase()}">${ep.method}</span></td>
                             <td><strong>${ep.requests.toLocaleString('cs-CZ')}</strong></td>
+                            <td><span class="time-badge">${Math.round(ep.avg_time || 0)} ms</span></td>
+                            <td><span class="time-badge time-min">${ep.min_time !== null ? Math.round(ep.min_time) : '-'} ms</span></td>
+                            <td><span class="time-badge time-max">${ep.max_time !== null ? Math.round(ep.max_time) : '-'} ms</span></td>
                             <td>
-                                <div style="position: relative;">
-                                    <div class="bar" style="width: ${Math.min(ep.percent, 100)}%">
-                                        <span class="bar-label">${ep.percent}%</span>
-                                    </div>
-                                </div>
+                                <span class="status-indicator ${statusClass}"></span>
+                                <span class="success-rate">${successRate}%</span>
                             </td>
                         </tr>
-                    `).join('');
+                    `}).join('');
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-inbox"></i><h4>Zatím žádné požadavky</h4><p>Zkuste zavolat nějaké API endpointy, např. <code>GET /svatky</code></p></div></td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-inbox"></i><h4>Zatím žádné požadavky</h4><p>Zkuste zavolat nějaké API endpointy, např. <code>GET /svatky</code></p></div></td></tr>';
                 }
 
                 const catBody = document.getElementById('categoryStatsBody');
@@ -610,7 +640,7 @@
             document.getElementById('requestsChange').textContent = '+0%';
 
             const tbody = document.getElementById('topEndpointsBody');
-            tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-database"></i><h4>Statistiky se načítají</h4><p>Po prvním API requestu se zde zobrazí data.<br><small>Zkuste: <code>GET /svatky</code></small></p></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-database"></i><h4>Statistiky se načítají</h4><p>Po prvním API requestu se zde zobrazí data.<br><small>Zkuste: <code>GET /svatky</code></small></p></div></td></tr>';
 
             const catBody = document.getElementById('categoryStatsBody');
             catBody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-folder-open"></i><p>Zatím žádná data</p></div></td></tr>';

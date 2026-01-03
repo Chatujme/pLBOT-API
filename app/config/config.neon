@@ -19,6 +19,9 @@ services:
 	# HTTP Client Service
 	- App\Services\HttpClientService
 
+	# Database Service (must be first - other services depend on it)
+	- App\Services\DatabaseService
+
 	# Business Services
 	- App\Services\SvatkyService
 	- App\Services\PocasiService

@@ -4,23 +4,19 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use Nette\Utils\FileSystem;
-use Nette\Utils\Json;
+use PDO;
 
 /**
- * Service for admin authentication
+ * Service for admin authentication using SQLite
  */
 final class AuthService
 {
-    private const CONFIG_FILE = __DIR__ . '/../../config/auth.json';
+    private PDO $pdo;
     private const TOKEN_EXPIRATION = 86400; // 24 hours
 
-    private array $config;
-    private array $tokens = [];
-
-    public function __construct()
+    public function __construct(DatabaseService $database)
     {
-        $this->loadConfig();
+        $this->pdo = $database->getPdo();
     }
 
     /**
@@ -28,39 +24,34 @@ final class AuthService
      */
     public function authenticate(string $username, string $password): ?string
     {
-        $users = $this->config['users'] ?? [];
+        try {
+            $stmt = $this->pdo->prepare("SELECT * FROM users WHERE username = ?");
+            $stmt->execute([$username]);
+            $user = $stmt->fetch();
 
-        if (!isset($users[$username])) {
-            return null;
-        }
+            if (!$user) {
+                return null;
+            }
 
-        $user = $users[$username];
-
-        // Verify password (use password_verify for hashed passwords)
-        if (isset($user['password_hash'])) {
             if (!password_verify($password, $user['password_hash'])) {
                 return null;
             }
-        } elseif (isset($user['password'])) {
-            // Plain text fallback (not recommended)
-            if ($password !== $user['password']) {
-                return null;
-            }
-        } else {
+
+            // Generate token
+            $token = bin2hex(random_bytes(32));
+            $expiresAt = date('Y-m-d H:i:s', time() + self::TOKEN_EXPIRATION);
+
+            $stmt = $this->pdo->prepare("
+                INSERT INTO auth_tokens (token, username, expires_at)
+                VALUES (?, ?, ?)
+            ");
+            $stmt->execute([$token, $username, $expiresAt]);
+
+            return $token;
+
+        } catch (\Exception $e) {
             return null;
         }
-
-        // Generate token
-        $token = bin2hex(random_bytes(32));
-        $this->tokens[$token] = [
-            'username' => $username,
-            'created' => time(),
-            'expires' => time() + self::TOKEN_EXPIRATION,
-        ];
-
-        $this->saveTokens();
-
-        return $token;
     }
 
     /**
@@ -68,22 +59,26 @@ final class AuthService
      */
     public function validateToken(string $token): ?array
     {
-        $this->loadTokens();
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT * FROM auth_tokens
+                WHERE token = ? AND expires_at > datetime('now')
+            ");
+            $stmt->execute([$token]);
+            $tokenData = $stmt->fetch();
 
-        if (!isset($this->tokens[$token])) {
+            if (!$tokenData) {
+                return null;
+            }
+
+            return [
+                'username' => $tokenData['username'],
+                'expires' => strtotime($tokenData['expires_at']),
+            ];
+
+        } catch (\Exception $e) {
             return null;
         }
-
-        $tokenData = $this->tokens[$token];
-
-        // Check expiration
-        if ($tokenData['expires'] < time()) {
-            unset($this->tokens[$token]);
-            $this->saveTokens();
-            return null;
-        }
-
-        return $tokenData;
     }
 
     /**
@@ -91,16 +86,14 @@ final class AuthService
      */
     public function revokeToken(string $token): bool
     {
-        $this->loadTokens();
+        try {
+            $stmt = $this->pdo->prepare("DELETE FROM auth_tokens WHERE token = ?");
+            $stmt->execute([$token]);
+            return $stmt->rowCount() > 0;
 
-        if (!isset($this->tokens[$token])) {
+        } catch (\Exception $e) {
             return false;
         }
-
-        unset($this->tokens[$token]);
-        $this->saveTokens();
-
-        return true;
     }
 
     /**
@@ -117,103 +110,53 @@ final class AuthService
     }
 
     /**
-     * Load config from file
-     */
-    private function loadConfig(): void
-    {
-        if (!file_exists(self::CONFIG_FILE)) {
-            // Create default config
-            $this->config = [
-                'users' => [
-                    'admin' => [
-                        'password_hash' => password_hash('admin', PASSWORD_DEFAULT),
-                        'role' => 'admin',
-                    ],
-                ],
-            ];
-            $this->saveConfig();
-            return;
-        }
-
-        try {
-            $content = FileSystem::read(self::CONFIG_FILE);
-            $this->config = Json::decode($content, forceArrays: true);
-        } catch (\Exception $e) {
-            $this->config = ['users' => []];
-        }
-    }
-
-    /**
-     * Save config to file
-     */
-    private function saveConfig(): void
-    {
-        try {
-            $dir = dirname(self::CONFIG_FILE);
-            if (!is_dir($dir)) {
-                FileSystem::createDir($dir);
-            }
-            FileSystem::write(self::CONFIG_FILE, Json::encode($this->config, Json::PRETTY));
-        } catch (\Exception $e) {
-            // Silent fail
-        }
-    }
-
-    /**
-     * Load tokens from temp file
-     */
-    private function loadTokens(): void
-    {
-        $tokensFile = dirname(self::CONFIG_FILE) . '/../temp/tokens.json';
-
-        if (!file_exists($tokensFile)) {
-            $this->tokens = [];
-            return;
-        }
-
-        try {
-            $content = FileSystem::read($tokensFile);
-            $this->tokens = Json::decode($content, forceArrays: true);
-
-            // Clean expired tokens
-            $now = time();
-            $this->tokens = array_filter($this->tokens, fn($t) => $t['expires'] > $now);
-        } catch (\Exception $e) {
-            $this->tokens = [];
-        }
-    }
-
-    /**
-     * Save tokens to temp file
-     */
-    private function saveTokens(): void
-    {
-        $tokensFile = dirname(self::CONFIG_FILE) . '/../temp/tokens.json';
-
-        try {
-            $dir = dirname($tokensFile);
-            if (!is_dir($dir)) {
-                FileSystem::createDir($dir);
-            }
-            FileSystem::write($tokensFile, Json::encode($this->tokens, Json::PRETTY));
-        } catch (\Exception $e) {
-            // Silent fail
-        }
-    }
-
-    /**
      * Change user password
      */
     public function changePassword(string $username, string $newPassword): bool
     {
-        if (!isset($this->config['users'][$username])) {
+        try {
+            $stmt = $this->pdo->prepare("
+                UPDATE users
+                SET password_hash = ?, updated_at = datetime('now')
+                WHERE username = ?
+            ");
+            $stmt->execute([password_hash($newPassword, PASSWORD_DEFAULT), $username]);
+            return $stmt->rowCount() > 0;
+
+        } catch (\Exception $e) {
             return false;
         }
+    }
 
-        $this->config['users'][$username]['password_hash'] = password_hash($newPassword, PASSWORD_DEFAULT);
-        unset($this->config['users'][$username]['password']); // Remove plain text if exists
+    /**
+     * Clean expired tokens
+     */
+    public function cleanExpiredTokens(): int
+    {
+        try {
+            $stmt = $this->pdo->prepare("
+                DELETE FROM auth_tokens WHERE expires_at < datetime('now')
+            ");
+            $stmt->execute();
+            return $stmt->rowCount();
 
-        $this->saveConfig();
-        return true;
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Get user info by username
+     */
+    public function getUser(string $username): ?array
+    {
+        try {
+            $stmt = $this->pdo->prepare("SELECT username, role, created_at FROM users WHERE username = ?");
+            $stmt->execute([$username]);
+            return $stmt->fetch() ?: null;
+
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 }
