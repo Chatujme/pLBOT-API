@@ -15,7 +15,7 @@
 # enable cool URL
 <IfModule mod_rewrite.c>
 	RewriteEngine On
-	# RewriteBase /
+	RewriteBase /pLBOT-API/www/
 
 	# Handle OPTIONS requests
 	RewriteCond %{REQUEST_METHOD} OPTIONS
@@ -27,7 +27,7 @@
 	# front controller
 	RewriteCond %{REQUEST_FILENAME} !-f
 	RewriteCond %{REQUEST_FILENAME} !-d
-	RewriteRule !\.(pdf|js|ico|gif|jpg|png|css|rar|zip|tar\.gz|map)$ index.php [L]
+	RewriteRule ^(.*)$ index.php?_url=/$1 [L,QSA]
 </IfModule>
 
 # enable gzip compression
