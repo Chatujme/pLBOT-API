@@ -4,7 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>pLBOT API - IRC Bot REST API</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-primary: #3b82f6;
+            --accent-secondary: #60a5fa;
+            --accent-success: #22c55e;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --border-color: #334155;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,9 +30,9 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-primary);
             min-height: 100vh;
-            color: #333;
+            color: var(--text-primary);
         }
 
         .container {
@@ -26,19 +43,26 @@
 
         header {
             text-align: center;
-            color: white;
             padding: 60px 20px;
+            border-bottom: 1px solid var(--border-color);
         }
 
         header h1 {
             font-size: 3em;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        header h1 i {
+            color: var(--accent-primary);
         }
 
         header p {
             font-size: 1.2em;
-            opacity: 0.9;
+            color: var(--text-secondary);
         }
 
         .nav-buttons {
@@ -50,51 +74,72 @@
         }
 
         .nav-buttons a {
-            background: white;
-            color: #667eea;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             padding: 12px 30px;
-            border-radius: 25px;
+            border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
             transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .nav-buttons a:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
             transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .nav-buttons a i {
+            color: var(--accent-primary);
         }
 
         .stats-card {
-            background: white;
-            border-radius: 15px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
             padding: 30px;
             margin: 20px 0;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
+        }
+
+        .stats-card h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stats-card h2 i {
+            color: var(--accent-primary);
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
-            margin-top: 20px;
         }
 
         .stat-item {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
             padding: 25px;
             border-radius: 10px;
             text-align: center;
+            border: 1px solid var(--border-color);
         }
 
         .stat-item h3 {
             font-size: 2.5em;
             margin-bottom: 5px;
+            color: var(--accent-primary);
         }
 
         .stat-item p {
-            opacity: 0.9;
+            color: var(--text-secondary);
             font-size: 1.1em;
         }
 
@@ -103,51 +148,77 @@
         }
 
         .category {
-            background: white;
+            background: var(--bg-secondary);
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
         }
 
         .category h3 {
-            color: #667eea;
+            color: var(--text-primary);
             margin-bottom: 15px;
-            font-size: 1.5em;
-            border-bottom: 2px solid #667eea;
+            font-size: 1.3em;
+            border-bottom: 2px solid var(--accent-primary);
             padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category h3 i {
+            color: var(--accent-primary);
+            width: 24px;
+            text-align: center;
         }
 
         .endpoints {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             gap: 10px;
             margin-top: 15px;
         }
 
         .endpoint {
-            background: #f8f9fa;
-            padding: 10px 15px;
-            border-radius: 5px;
+            background: var(--bg-tertiary);
+            padding: 12px 15px;
+            border-radius: 6px;
             font-size: 0.9em;
-            border-left: 3px solid #667eea;
+            border-left: 3px solid var(--accent-primary);
+            transition: all 0.2s;
+        }
+
+        .endpoint:hover {
+            background: var(--bg-primary);
+            border-left-color: var(--accent-secondary);
         }
 
         .endpoint-method {
-            color: #667eea;
+            color: var(--accent-success);
             font-weight: 600;
-            margin-right: 5px;
+            margin-right: 8px;
+        }
+
+        .endpoint-path {
+            color: var(--text-secondary);
+            font-family: 'Courier New', monospace;
         }
 
         footer {
             text-align: center;
             padding: 40px 20px;
-            color: white;
+            color: var(--text-muted);
             margin-top: 50px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        footer p {
+            margin: 5px 0;
         }
 
         .quick-test {
-            background: #f8f9fa;
+            background: var(--bg-tertiary);
             padding: 20px;
             border-radius: 10px;
             margin-top: 20px;
@@ -155,39 +226,57 @@
 
         .quick-test h4 {
             margin-bottom: 15px;
-            color: #667eea;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quick-test h4 i {
+            color: var(--accent-primary);
         }
 
         .test-example {
-            background: #2d3748;
-            color: #a0aec0;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
             padding: 15px;
-            border-radius: 5px;
+            border-radius: 6px;
             font-family: 'Courier New', monospace;
             overflow-x: auto;
             margin-bottom: 10px;
+            border: 1px solid var(--border-color);
         }
 
         .test-example code {
-            color: #68d391;
+            color: var(--accent-success);
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: var(--accent-primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-left: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🤖 pLBOT API</h1>
+            <h1><i class="fas fa-robot"></i> pLBOT API <span class="version-badge">v2.0</span></h1>
             <p>Modernizované REST API pro IRC bota</p>
         </header>
 
         <div class="nav-buttons">
-            <a href="explorer.html">🔍 API Explorer</a>
-            <a href="dashboard/">📊 Administrace</a>
-            <a href="#docs">📚 Dokumentace</a>
+            <a href="explorer.html"><i class="fas fa-search"></i> API Explorer</a>
+            <a href="dashboard/"><i class="fas fa-chart-bar"></i> Administrace</a>
+            <a href="swagger/"><i class="fas fa-book"></i> Dokumentace</a>
         </div>
 
         <div class="stats-card">
-            <h2>📊 Rychlý přehled</h2>
+            <h2><i class="fas fa-tachometer-alt"></i> Rychlý přehled</h2>
             <div class="stats-grid">
                 <div class="stat-item">
                     <h3>73</h3>
@@ -198,90 +287,90 @@
                     <p>Kategorií služeb</p>
                 </div>
                 <div class="stat-item">
-                    <h3>100%</h3>
-                    <p>Funkční</p>
+                    <h3 id="uptime">100%</h3>
+                    <p>Dostupnost</p>
                 </div>
             </div>
         </div>
 
         <div class="stats-card">
-            <h2>🎯 Rychlý start</h2>
+            <h2><i class="fas fa-rocket"></i> Rychlý start</h2>
             <div class="quick-test">
-                <h4>Zkuste hned teď:</h4>
+                <h4><i class="fas fa-terminal"></i> Zkuste hned teď:</h4>
                 <div class="test-example">
-                    <code>curl http://localhost:8080/svatky</code>
+                    <code>curl http://localhost/pLBOT-API/www/svatky</code>
                 </div>
                 <div class="test-example">
-                    <code>curl http://localhost:8080/ares/ico/45274649</code>
+                    <code>curl http://localhost/pLBOT-API/www/ares/ico/45274649</code>
                 </div>
                 <div class="test-example">
-                    <code>curl http://localhost:8080/cnb/kurzy/USD</code>
+                    <code>curl http://localhost/pLBOT-API/www/cnb/kurzy/USD</code>
                 </div>
             </div>
         </div>
 
         <div class="api-categories">
             <div class="category">
-                <h3>💼 Business & Finance</h3>
+                <h3><i class="fas fa-briefcase"></i> Business & Finance</h3>
                 <div class="endpoints">
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /ares/ico/{ico}</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /ares/vyhledat</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /cnb/kurzy</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /cnb/prevod</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /crypto/price/{coin}</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /vat/validate</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/ares/ico/{ico}</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/ares/vyhledat</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/cnb/kurzy</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/cnb/prevod</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/crypto/price/{coin}</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/vat/validate</span></div>
                 </div>
             </div>
 
             <div class="category">
-                <h3>🛠️ Utility APIs</h3>
+                <h3><i class="fas fa-tools"></i> Utility APIs</h3>
                 <div class="endpoints">
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /qr/generate</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /hash</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /uuid</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /url/shorten</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /hash/base64/encode</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/qr/generate</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/hash</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/uuid</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/url/shorten</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/hash/base64/encode</span></div>
                 </div>
             </div>
 
             <div class="category">
-                <h3>📊 Data & Information</h3>
+                <h3><i class="fas fa-database"></i> Data & Information</h3>
                 <div class="endpoints">
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /countries/{country}</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /iss/position</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /news/latest</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /svatky</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /pocasi</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /horoskop/{znameni}</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/countries/{country}</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/iss/position</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/news/latest</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/svatky</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/pocasi</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/horoskop/{znameni}</span></div>
                 </div>
             </div>
 
             <div class="category">
-                <h3>🎨 Image Processing</h3>
+                <h3><i class="fas fa-image"></i> Image Processing</h3>
                 <div class="endpoints">
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /image/resize</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /image/crop</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /image/rotate</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /image/watermark</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/image/resize</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/image/crop</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/image/rotate</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/image/watermark</span></div>
                 </div>
             </div>
 
             <div class="category">
-                <h3>🎲 Fun & Random</h3>
+                <h3><i class="fas fa-dice"></i> Fun & Random</h3>
                 <div class="endpoints">
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /advice</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /chucknorris</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /dog</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /fox</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /joke</div>
-                    <div class="endpoint"><span class="endpoint-method">GET</span> /trivia</div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/advice</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/chucknorris</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/dog</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/fox</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/joke</span></div>
+                    <div class="endpoint"><span class="endpoint-method">GET</span><span class="endpoint-path">/trivia</span></div>
                 </div>
             </div>
         </div>
 
         <footer>
-            <p>pLBOT API v2.0 | Powered by Nette & Apitte</p>
-            <p style="opacity: 0.8; margin-top: 10px;">73 endpointů | REST API | OpenAPI 3.0</p>
+            <p><i class="fas fa-code"></i> pLBOT API v2.0 | Powered by Nette & Apitte</p>
+            <p>73 endpointů | REST API | OpenAPI 3.0</p>
         </footer>
     </div>
 </body>

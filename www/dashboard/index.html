@@ -4,7 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - pLBOT API</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-primary: #3b82f6;
+            --accent-secondary: #60a5fa;
+            --accent-success: #22c55e;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --border-color: #334155;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,15 +30,16 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #f5f7fa;
-            color: #333;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-bottom: 1px solid var(--border-color);
         }
 
         .header-content {
@@ -34,20 +52,31 @@
 
         .header h1 {
             font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 i {
+            color: var(--accent-primary);
         }
 
         .back-link {
-            color: white;
+            color: var(--text-secondary);
             text-decoration: none;
-            opacity: 0.9;
             padding: 8px 16px;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
             transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .back-link:hover {
-            background: rgba(255,255,255,0.1);
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
         }
 
         .container {
@@ -64,56 +93,127 @@
         }
 
         .stat-card {
-            background: white;
+            background: var(--bg-secondary);
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
             transition: all 0.3s;
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transform: translateY(-3px);
+            border-color: var(--accent-primary);
+        }
+
+        .stat-card .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .stat-card .stat-icon.requests {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--accent-primary);
+        }
+
+        .stat-card .stat-icon.success {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--accent-success);
+        }
+
+        .stat-card .stat-icon.speed {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-warning);
+        }
+
+        .stat-card .stat-icon.endpoints {
+            background: rgba(96, 165, 250, 0.2);
+            color: var(--accent-secondary);
         }
 
         .stat-card .stat-value {
             font-size: 2.5em;
             font-weight: 700;
-            color: #667eea;
-            margin-top: 10px;
+            color: var(--text-primary);
+            margin-bottom: 5px;
         }
 
         .stat-card .stat-label {
-            color: #666;
+            color: var(--text-muted);
             font-size: 0.95em;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .stat-card .stat-change {
-            margin-top: 10px;
+            margin-top: 12px;
             font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .stat-change.positive {
-            color: #10b981;
+            color: var(--accent-success);
         }
 
         .stat-change.negative {
-            color: #ef4444;
+            color: var(--accent-danger);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-ok {
+            background: var(--accent-success);
+            box-shadow: 0 0 8px var(--accent-success);
+        }
+
+        .status-error {
+            background: var(--accent-danger);
+            box-shadow: 0 0 8px var(--accent-danger);
+        }
+
+        .status-warning {
+            background: var(--accent-warning);
+            box-shadow: 0 0 8px var(--accent-warning);
         }
 
         .chart-card {
-            background: white;
+            background: var(--bg-secondary);
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+        }
+
+        .chart-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
         }
 
         .chart-card h3 {
-            margin-bottom: 20px;
-            color: #333;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-card h3 i {
+            color: var(--accent-primary);
         }
 
         .table-container {
@@ -126,48 +226,52 @@
         }
 
         th {
-            background: #f8f9fa;
+            background: var(--bg-tertiary);
             padding: 15px;
             text-align: left;
             font-weight: 600;
-            color: #555;
-            border-bottom: 2px solid #e0e0e0;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-color);
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
         }
 
         td {
             padding: 15px;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
         }
 
         tr:hover {
-            background: #f8f9fa;
+            background: var(--bg-tertiary);
         }
 
         .endpoint-path {
             font-family: 'Courier New', monospace;
-            color: #667eea;
+            color: var(--accent-secondary);
         }
 
         .method-badge {
             display: inline-block;
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 4px;
             font-size: 0.85em;
             font-weight: 600;
         }
 
         .method-get {
-            background: #e3f2fd;
-            color: #1976d2;
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--accent-primary);
         }
 
         .method-post {
-            background: #e8f5e9;
-            color: #388e3c;
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--accent-success);
         }
 
         .refresh-button {
-            background: #667eea;
+            background: var(--accent-primary);
             color: white;
             border: none;
             padding: 10px 20px;
@@ -176,19 +280,23 @@
             font-size: 14px;
             font-weight: 600;
             transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .refresh-button:hover {
-            background: #5568d3;
+            background: var(--accent-secondary);
             transform: translateY(-2px);
         }
 
         .bar {
             height: 30px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: var(--accent-primary);
             border-radius: 4px;
             transition: width 0.5s;
             position: relative;
+            min-width: 50px;
         }
 
         .bar-label {
@@ -209,37 +317,23 @@
 
         .time-filter button {
             padding: 8px 16px;
-            border: 1px solid #ddd;
-            background: white;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s;
         }
 
         .time-filter button.active {
-            background: #667eea;
+            background: var(--accent-primary);
             color: white;
-            border-color: #667eea;
+            border-color: var(--accent-primary);
         }
 
-        .status-indicator {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-
-        .status-ok {
-            background: #10b981;
-        }
-
-        .status-error {
-            background: #ef4444;
-        }
-
-        .status-warning {
-            background: #f59e0b;
+        .time-filter button:hover:not(.active) {
+            background: var(--bg-primary);
+            border-color: var(--accent-primary);
         }
 
         @keyframes pulse {
@@ -254,19 +348,94 @@
         .loading {
             animation: pulse 1.5s infinite;
         }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: var(--accent-primary);
+            opacity: 0.5;
+        }
+
+        .empty-state h4 {
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .empty-state code {
+            background: var(--bg-tertiary);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .chart-placeholder {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .chart-placeholder i {
+            margin-right: 10px;
+            color: var(--accent-primary);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+        }
+
+        .user-info #userName {
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: var(--accent-danger);
+            border-color: var(--accent-danger);
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="header-content">
-            <h1>📊 Admin Dashboard</h1>
-            <a href="../index.html" class="back-link">← Zpět na hlavní stránku</a>
+            <h1><i class="fas fa-chart-line"></i> Admin Dashboard</h1>
+            <a href="../index.html" class="back-link"><i class="fas fa-arrow-left"></i> Zpět</a>
+            <div class="user-info" id="userInfo">
+                <span id="userName"></span>
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
         </div>
     </div>
 
     <div class="container">
         <div class="stats-grid">
             <div class="stat-card">
+                <div class="stat-icon requests">
+                    <i class="fas fa-server"></i>
+                </div>
                 <div class="stat-label">Celkem požadavků</div>
                 <div class="stat-value" id="totalRequests">-</div>
                 <div class="stat-change positive">
@@ -276,6 +445,9 @@
             </div>
 
             <div class="stat-card">
+                <div class="stat-icon success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
                 <div class="stat-label">Úspěšnost</div>
                 <div class="stat-value" id="successRate">-</div>
                 <div class="stat-change" id="successChange">
@@ -285,7 +457,10 @@
             </div>
 
             <div class="stat-card">
-                <div class="stat-label">Průměrná doba odezvy</div>
+                <div class="stat-icon speed">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div class="stat-label">Průměrná odezva</div>
                 <div class="stat-value" id="avgResponse">-</div>
                 <div class="stat-change positive">
                     <span class="status-indicator status-ok"></span>
@@ -294,6 +469,9 @@
             </div>
 
             <div class="stat-card">
+                <div class="stat-icon endpoints">
+                    <i class="fas fa-plug"></i>
+                </div>
                 <div class="stat-label">Aktivní endpointy</div>
                 <div class="stat-value">73</div>
                 <div class="stat-change">
@@ -304,9 +482,11 @@
         </div>
 
         <div class="chart-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3>📈 Top 10 Nejpoužívanějších Endpointů</h3>
-                <button class="refresh-button" onclick="loadStats()">🔄 Obnovit</button>
+            <div class="chart-card-header">
+                <h3><i class="fas fa-trophy"></i> Top 10 Nejpoužívanějších Endpointů</h3>
+                <button class="refresh-button" onclick="loadStats()">
+                    <i class="fas fa-sync-alt"></i> Obnovit
+                </button>
             </div>
             <div class="table-container">
                 <table id="topEndpoints">
@@ -320,14 +500,19 @@
                         </tr>
                     </thead>
                     <tbody id="topEndpointsBody">
-                        <tr><td colspan="5" style="text-align: center; padding: 40px;">Načítání dat...</td></tr>
+                        <tr><td colspan="5">
+                            <div class="empty-state">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Načítání dat...</p>
+                            </div>
+                        </td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
         <div class="chart-card">
-            <h3>📊 Statistiky podle kategorií</h3>
+            <h3><i class="fas fa-layer-group"></i> Statistiky podle kategorií</h3>
             <div class="table-container">
                 <table id="categoryStats">
                     <thead>
@@ -339,18 +524,22 @@
                         </tr>
                     </thead>
                     <tbody id="categoryStatsBody">
-                        <tr><td colspan="4" style="text-align: center; padding: 40px;">Načítání dat...</td></tr>
+                        <tr><td colspan="4">
+                            <div class="empty-state">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Načítání dat...</p>
+                            </div>
+                        </td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
         <div class="chart-card">
-            <h3>⏱️ Historie požadavků (24h)</h3>
-            <div id="requestsChart" style="min-height: 200px;">
-                <p style="text-align: center; padding: 60px; color: #999;">
-                    Graf bude k dispozici po implementaci request loggingu
-                </p>
+            <h3><i class="fas fa-clock"></i> Historie požadavků (24h)</h3>
+            <div class="chart-placeholder">
+                <i class="fas fa-chart-area"></i>
+                Graf bude k dispozici po implementaci request loggingu
             </div>
         </div>
     </div>
@@ -358,7 +547,7 @@
     <script>
         async function loadStats() {
             try {
-                const response = await fetch('/admin/stats');
+                const response = await fetch('../admin/stats');
                 const data = await response.json();
 
                 if (data.error) {
@@ -367,16 +556,13 @@
                     return;
                 }
 
-                // Update main stats
                 document.getElementById('totalRequests').textContent = data.totalRequests.toLocaleString('cs-CZ');
                 document.getElementById('successRate').textContent = data.successRate + '%';
                 document.getElementById('avgResponse').textContent = Math.round(data.avgResponseTime) + ' ms';
 
-                // Update request change indicator
                 const change = data.requestsChange || 0;
                 document.getElementById('requestsChange').textContent = (change > 0 ? '+' : '') + change + '%';
 
-                // Update top endpoints table
                 const tbody = document.getElementById('topEndpointsBody');
                 if (data.topEndpoints && data.topEndpoints.length > 0) {
                     tbody.innerHTML = data.topEndpoints.map((ep, index) => `
@@ -395,10 +581,9 @@
                         </tr>
                     `).join('');
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #999;">Zatím žádné požadavky. Zkuste zavolat nějaké API endpointy!</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-inbox"></i><h4>Zatím žádné požadavky</h4><p>Zkuste zavolat nějaké API endpointy, např. <code>GET /svatky</code></p></div></td></tr>';
                 }
 
-                // Update category stats
                 const catBody = document.getElementById('categoryStatsBody');
                 if (data.categories && data.categories.length > 0) {
                     catBody.innerHTML = data.categories.map(cat => `
@@ -410,7 +595,7 @@
                         </tr>
                     `).join('');
                 } else {
-                    catBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #999;">Žádná data k zobrazení</td></tr>';
+                    catBody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-folder-open"></i><p>Žádná data k zobrazení</p></div></td></tr>';
                 }
             } catch (error) {
                 console.error('Failed to load stats:', error);
@@ -425,17 +610,52 @@
             document.getElementById('requestsChange').textContent = '+0%';
 
             const tbody = document.getElementById('topEndpointsBody');
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #999;">Statistiky se načítají po prvním API requestu...<br><small style="margin-top: 10px; display: block;">Zkuste zavolat endpoint například: <code>GET /svatky</code></small></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-database"></i><h4>Statistiky se načítají</h4><p>Po prvním API requestu se zde zobrazí data.<br><small>Zkuste: <code>GET /svatky</code></small></p></div></td></tr>';
 
             const catBody = document.getElementById('categoryStatsBody');
-            catBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #999;">Zatím žádná data</td></tr>';
+            catBody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-folder-open"></i><p>Zatím žádná data</p></div></td></tr>';
         }
 
-        // Load stats on page load
-        window.addEventListener('DOMContentLoaded', loadStats);
+        // Check authentication
+        function checkAuth() {
+            const token = localStorage.getItem('auth_token');
+            const user = localStorage.getItem('auth_user');
 
-        // Auto-refresh every 10 seconds
-        setInterval(loadStats, 10000);
+            if (!token) {
+                window.location.href = 'login.html';
+                return false;
+            }
+
+            document.getElementById('userName').textContent = user || 'Admin';
+            return true;
+        }
+
+        async function logout() {
+            const token = localStorage.getItem('auth_token');
+
+            if (token) {
+                try {
+                    await fetch('../admin/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                        },
+                    });
+                } catch (e) {
+                    // Ignore errors
+                }
+            }
+
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('auth_user');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize
+        if (checkAuth()) {
+            loadStats();
+            setInterval(loadStats, 10000);
+        }
     </script>
 </body>
 </html>

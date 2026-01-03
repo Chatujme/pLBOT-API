@@ -50,10 +50,15 @@ services:
 	- App\Services\NewsRssService
 	- App\Services\ImageService
 	- App\Services\StatsService
+	- App\Services\AuthService
 
-	# Middlewares
-	- App\Middlewares\RateLimitMiddleware
-	- App\Middlewares\StatsMiddleware
+	# Middlewares with tags for Contributte/Middlewares
+	-
+		factory: App\Middlewares\RateLimitMiddleware
+		tags: [contributte.middlewares.middleware: {priority: 50}]
+	-
+		factory: App\Middlewares\StatsMiddleware
+		tags: [contributte.middlewares.middleware: {priority: 10}]
 
 	# API Controllers
 	-
@@ -145,6 +150,9 @@ services:
 		tags: [apitte.core.controller]
 	-
 		factory: App\Controllers\AdminController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\OpenApiController
 		tags: [apitte.core.controller]
 
 extensions:

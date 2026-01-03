@@ -4,7 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API Explorer - pLBOT API</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-primary: #3b82f6;
+            --accent-secondary: #60a5fa;
+            --accent-success: #22c55e;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --border-color: #334155;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,27 +30,53 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #f5f7fa;
-            color: #333;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 20px;
         }
 
         .header h1 {
-            max-width: 1200px;
-            margin: 0 auto;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .header .back-link {
-            color: white;
+        .header h1 i {
+            color: var(--accent-primary);
+        }
+
+        .back-link {
+            color: var(--text-secondary);
             text-decoration: none;
-            opacity: 0.9;
-            margin-right: 20px;
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-link:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
         }
 
         .container {
@@ -43,25 +86,44 @@
         }
 
         .search-box {
-            background: white;
+            background: var(--bg-secondary);
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 12px;
             margin: 20px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
+        }
+
+        .search-input-wrapper {
+            position: relative;
+        }
+
+        .search-input-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
         }
 
         .search-box input {
             width: 100%;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
+            padding: 15px 15px 15px 45px;
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             font-size: 16px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
             transition: border-color 0.3s;
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-muted);
         }
 
         .search-box input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--accent-primary);
         }
 
         .api-list {
@@ -70,27 +132,28 @@
         }
 
         .api-item {
-            background: white;
-            border-radius: 10px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
             transition: all 0.3s;
             cursor: pointer;
         }
 
         .api-item:hover {
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-color: var(--accent-primary);
             transform: translateY(-2px);
         }
 
         .api-item.expanded {
-            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+            border-color: var(--accent-primary);
         }
 
         .api-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
         }
 
         .api-method {
@@ -103,24 +166,24 @@
         }
 
         .method-get {
-            background: #e3f2fd;
-            color: #1976d2;
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--accent-primary);
         }
 
         .method-post {
-            background: #e8f5e9;
-            color: #388e3c;
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--accent-success);
         }
 
         .api-path {
             font-family: 'Courier New', monospace;
             font-size: 1.1em;
-            color: #333;
+            color: var(--text-primary);
             flex: 1;
         }
 
         .api-description {
-            color: #666;
+            color: var(--text-secondary);
             margin-top: 10px;
             font-size: 0.95em;
         }
@@ -129,7 +192,7 @@
             display: none;
             margin-top: 20px;
             padding-top: 20px;
-            border-top: 2px solid #f0f0f0;
+            border-top: 1px solid var(--border-color);
         }
 
         .api-item.expanded .api-details {
@@ -137,15 +200,23 @@
         }
 
         .try-it {
-            background: #f8f9fa;
+            background: var(--bg-tertiary);
             padding: 20px;
-            border-radius: 8px;
+            border-radius: 10px;
             margin-top: 15px;
+            border: 1px solid var(--border-color);
         }
 
         .try-it h4 {
             margin-bottom: 15px;
-            color: #667eea;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .try-it h4 i {
+            color: var(--accent-primary);
         }
 
         .param-input {
@@ -156,19 +227,33 @@
             display: block;
             margin-bottom: 5px;
             font-weight: 600;
-            color: #555;
+            color: var(--text-secondary);
         }
 
         .param-input input {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
             font-size: 14px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: border-color 0.3s;
+        }
+
+        .param-input input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .param-input small {
+            color: var(--text-muted);
+            display: block;
+            margin-top: 5px;
         }
 
         .try-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--accent-primary);
             color: white;
             border: none;
             padding: 12px 30px;
@@ -177,11 +262,14 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .try-button:hover {
+            background: var(--accent-secondary);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
         .response-area {
@@ -193,21 +281,34 @@
             display: block;
         }
 
+        .response-area h5 {
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .response-area h5 i {
+            color: var(--accent-success);
+        }
+
         .response-area pre {
-            background: #2d3748;
-            color: #a0aec0;
+            background: var(--bg-primary);
+            color: var(--accent-success);
             padding: 15px;
             border-radius: 8px;
             overflow-x: auto;
             font-family: 'Courier New', monospace;
             font-size: 14px;
+            border: 1px solid var(--border-color);
         }
 
         .loading {
             display: none;
             text-align: center;
             padding: 20px;
-            color: #667eea;
+            color: var(--accent-primary);
         }
 
         .loading.show {
@@ -215,8 +316,8 @@
         }
 
         .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border: 3px solid var(--bg-tertiary);
+            border-top: 3px solid var(--accent-primary);
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -230,49 +331,95 @@
         }
 
         .example-response {
-            background: #f8f9fa;
+            background: var(--bg-tertiary);
             padding: 15px;
             border-radius: 8px;
-            margin-top: 10px;
+            margin-top: 15px;
+            border: 1px solid var(--border-color);
         }
 
         .example-response h5 {
             margin-bottom: 10px;
-            color: #667eea;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .example-response h5 i {
+            color: var(--accent-warning);
         }
 
         .example-response pre {
-            background: #2d3748;
-            color: #a0aec0;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
             padding: 15px;
-            border-radius: 5px;
+            border-radius: 6px;
             overflow-x: auto;
             font-size: 13px;
+            border: 1px solid var(--border-color);
         }
 
         .tag {
             display: inline-block;
-            background: #e0e7ff;
-            color: #5145cd;
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-secondary);
             padding: 4px 10px;
             border-radius: 12px;
             font-size: 0.85em;
             margin-right: 8px;
             margin-top: 8px;
         }
+
+        .expand-icon {
+            color: var(--accent-primary);
+            font-size: 1.2em;
+            transition: transform 0.3s;
+        }
+
+        .api-item.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .endpoint-count {
+            background: var(--bg-tertiary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+        }
+
+        .endpoint-count i {
+            color: var(--accent-primary);
+        }
+
+        .endpoint-count strong {
+            color: var(--text-primary);
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="container">
-            <a href="index.html" class="back-link">← Zpět</a>
-            <h1>🔍 API Explorer</h1>
+        <div class="header-content">
+            <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Zpět</a>
+            <h1><i class="fas fa-compass"></i> API Explorer</h1>
         </div>
     </div>
 
     <div class="container">
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Hledat endpoint... (např. 'svatky', 'ares', 'qr')" />
+            <div class="search-input-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Hledat endpoint... (např. 'svatky', 'ares', 'qr')" />
+            </div>
+        </div>
+
+        <div class="endpoint-count" id="endpointCount">
+            <i class="fas fa-list"></i>
+            Zobrazeno <strong id="visibleCount">0</strong> z <strong id="totalCount">0</strong> endpointů
         </div>
 
         <div class="api-list" id="apiList"></div>
@@ -435,6 +582,72 @@
                         "popis": "Zataženo"
                     }
                 }
+            },
+            {
+                method: 'GET',
+                path: '/fox',
+                description: 'Vrátí náhodný obrázek lišky',
+                tags: ['Fun', 'Random'],
+                params: [],
+                example: {
+                    "data": {
+                        "image_url": "https://randomfox.ca/images/12.jpg"
+                    }
+                }
+            },
+            {
+                method: 'GET',
+                path: '/chucknorris',
+                description: 'Vrátí náhodný vtip o Chucku Norrisovi',
+                tags: ['Fun', 'Random'],
+                params: [],
+                example: {
+                    "data": {
+                        "joke": "Chuck Norris can divide by zero."
+                    }
+                }
+            },
+            {
+                method: 'GET',
+                path: '/joke',
+                description: 'Vrátí náhodný vtip',
+                tags: ['Fun', 'Random'],
+                params: [],
+                example: {
+                    "data": {
+                        "setup": "Why did the scarecrow win an award?",
+                        "punchline": "Because he was outstanding in his field."
+                    }
+                }
+            },
+            {
+                method: 'GET',
+                path: '/trivia',
+                description: 'Vrátí náhodnou trivia otázku',
+                tags: ['Fun', 'Quiz'],
+                params: [],
+                example: {
+                    "data": {
+                        "question": "What is the capital of France?",
+                        "answer": "Paris"
+                    }
+                }
+            },
+            {
+                method: 'GET',
+                path: '/crypto/price/{coin}',
+                description: 'Vrátí aktuální cenu kryptoměny',
+                tags: ['Finance', 'Crypto'],
+                params: [
+                    { name: 'coin', type: 'path', required: true, description: 'ID kryptoměny (bitcoin, ethereum, ...)', example: 'bitcoin' }
+                ],
+                example: {
+                    "data": {
+                        "id": "bitcoin",
+                        "symbol": "btc",
+                        "price_usd": 42000.50
+                    }
+                }
             }
         ];
 
@@ -446,6 +659,9 @@
                 ep.tags.some(tag => tag.toLowerCase().includes(filter.toLowerCase()))
             );
 
+            document.getElementById('visibleCount').textContent = filtered.length;
+            document.getElementById('totalCount').textContent = endpoints.length;
+
             apiList.innerHTML = filtered.map((endpoint, index) => `
                 <div class="api-item" id="api-${index}">
                     <div class="api-header" onclick="toggleEndpoint(${index})">
@@ -454,30 +670,30 @@
                             <span class="api-path">${endpoint.path}</span>
                             <div class="api-description">${endpoint.description}</div>
                             <div>
-                                ${endpoint.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                                ${endpoint.tags.map(tag => `<span class="tag"><i class="fas fa-tag"></i> ${tag}</span>`).join('')}
                             </div>
                         </div>
-                        <div style="color: #667eea; font-size: 1.5em;">▼</div>
+                        <i class="fas fa-chevron-down expand-icon"></i>
                     </div>
 
                     <div class="api-details">
                         <div class="try-it">
-                            <h4>🧪 Vyzkoušejte</h4>
+                            <h4><i class="fas fa-flask"></i> Vyzkoušejte</h4>
                             ${endpoint.params.map(param => `
                                 <div class="param-input">
-                                    <label>${param.name} ${param.required ? '*' : '(volitelné)'}</label>
+                                    <label>${param.name} ${param.required ? '<span style="color: var(--accent-danger)">*</span>' : '(volitelné)'}</label>
                                     <input
                                         type="text"
                                         id="param-${index}-${param.name}"
                                         placeholder="${param.example}"
                                         value="${param.example}"
                                     />
-                                    <small style="color: #666;">${param.description}</small>
+                                    <small><i class="fas fa-info-circle"></i> ${param.description}</small>
                                 </div>
                             `).join('')}
 
                             <button class="try-button" onclick="tryEndpoint(${index})">
-                                Odeslat požadavek
+                                <i class="fas fa-paper-plane"></i> Odeslat požadavek
                             </button>
 
                             <div class="loading" id="loading-${index}">
@@ -486,13 +702,13 @@
                             </div>
 
                             <div class="response-area" id="response-${index}">
-                                <h5>Odpověď:</h5>
+                                <h5><i class="fas fa-check-circle"></i> Odpověď:</h5>
                                 <pre id="response-data-${index}"></pre>
                             </div>
                         </div>
 
                         <div class="example-response">
-                            <h5>📄 Příklad odpovědi</h5>
+                            <h5><i class="fas fa-file-code"></i> Příklad odpovědi</h5>
                             <pre>${JSON.stringify(endpoint.example, null, 2)}</pre>
                         </div>
                     </div>
@@ -513,7 +729,6 @@
             let url = endpoint.path;
             const params = new URLSearchParams();
 
-            // Build URL
             endpoint.params.forEach(param => {
                 const value = document.getElementById(`param-${index}-${param.name}`).value;
                 if (param.type === 'path') {
@@ -552,7 +767,6 @@
             renderEndpoints(e.target.value);
         });
 
-        // Initial render
         renderEndpoints();
     </script>
 </body>
