@@ -325,4 +325,339 @@ final class StatsService
             'byHour' => [],
         ];
     }
+
+    /**
+     * Get error statistics by endpoint and status code
+     */
+    public function getErrorStats(): array
+    {
+        try {
+            // Get error count by status code
+            $stmt = $this->pdo->query("
+                SELECT status_code, COUNT(*) as count
+                FROM stats_requests
+                WHERE status_code >= 400
+                AND created_at >= datetime('now', '-24 hours')
+                GROUP BY status_code
+                ORDER BY count DESC
+            ");
+            $byStatusCode = [];
+            while ($row = $stmt->fetch()) {
+                $byStatusCode[] = [
+                    'status_code' => (int) $row['status_code'],
+                    'count' => (int) $row['count'],
+                ];
+            }
+
+            // Get errors by endpoint
+            $stmt = $this->pdo->query("
+                SELECT path, method, COUNT(*) as error_count
+                FROM stats_requests
+                WHERE status_code >= 400
+                AND created_at >= datetime('now', '-24 hours')
+                GROUP BY path, method
+                ORDER BY error_count DESC
+                LIMIT 10
+            ");
+            $byEndpoint = [];
+            while ($row = $stmt->fetch()) {
+                $byEndpoint[] = [
+                    'path' => $row['path'],
+                    'method' => $row['method'],
+                    'errors' => (int) $row['error_count'],
+                ];
+            }
+
+            // Get hourly error trend
+            $stmt = $this->pdo->query("
+                SELECT strftime('%Y-%m-%d %H:00', created_at) as hour, COUNT(*) as errors
+                FROM stats_requests
+                WHERE status_code >= 400
+                AND created_at >= datetime('now', '-24 hours')
+                GROUP BY hour
+                ORDER BY hour ASC
+            ");
+            $hourlyErrors = [];
+            while ($row = $stmt->fetch()) {
+                $hourlyErrors[$row['hour']] = (int) $row['errors'];
+            }
+
+            // Fill missing hours
+            $now = new \DateTime();
+            $hourlyTrend = [];
+            for ($i = 23; $i >= 0; $i--) {
+                $hour = (clone $now)->modify("-{$i} hours")->format('Y-m-d H:00');
+                $hourlyTrend[] = [
+                    'hour' => $hour,
+                    'label' => (clone $now)->modify("-{$i} hours")->format('H:00'),
+                    'errors' => $hourlyErrors[$hour] ?? 0,
+                ];
+            }
+
+            // Get total error count
+            $stmt = $this->pdo->query("
+                SELECT COUNT(*) FROM stats_requests
+                WHERE status_code >= 400
+                AND created_at >= datetime('now', '-24 hours')
+            ");
+            $totalErrors = (int) $stmt->fetchColumn();
+
+            return [
+                'total_errors_24h' => $totalErrors,
+                'by_status_code' => $byStatusCode,
+                'by_endpoint' => $byEndpoint,
+                'hourly_trend' => $hourlyTrend,
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'total_errors_24h' => 0,
+                'by_status_code' => [],
+                'by_endpoint' => [],
+                'hourly_trend' => [],
+            ];
+        }
+    }
+
+    /**
+     * Get latency statistics for heatmap visualization
+     */
+    public function getLatencyStats(): array
+    {
+        try {
+            // Get latency distribution by endpoint
+            $stmt = $this->pdo->query("
+                SELECT
+                    path,
+                    method,
+                    requests,
+                    avg_time,
+                    min_time,
+                    max_time,
+                    CASE
+                        WHEN avg_time < 100 THEN 'fast'
+                        WHEN avg_time < 500 THEN 'normal'
+                        WHEN avg_time < 1000 THEN 'slow'
+                        ELSE 'very_slow'
+                    END as latency_class
+                FROM stats_endpoints
+                WHERE requests > 0
+                ORDER BY avg_time DESC
+            ");
+            $endpoints = [];
+            while ($row = $stmt->fetch()) {
+                $endpoints[] = [
+                    'path' => $row['path'],
+                    'method' => $row['method'],
+                    'requests' => (int) $row['requests'],
+                    'avg_time' => round((float) $row['avg_time'], 2),
+                    'min_time' => $row['min_time'] !== null ? round((float) $row['min_time'], 2) : null,
+                    'max_time' => $row['max_time'] !== null ? round((float) $row['max_time'], 2) : null,
+                    'latency_class' => $row['latency_class'],
+                ];
+            }
+
+            // Get latency distribution
+            $stmt = $this->pdo->query("
+                SELECT
+                    CASE
+                        WHEN response_time < 100 THEN '<100ms'
+                        WHEN response_time < 250 THEN '100-250ms'
+                        WHEN response_time < 500 THEN '250-500ms'
+                        WHEN response_time < 1000 THEN '500ms-1s'
+                        ELSE '>1s'
+                    END as bucket,
+                    COUNT(*) as count
+                FROM stats_requests
+                WHERE created_at >= datetime('now', '-24 hours')
+                GROUP BY bucket
+                ORDER BY
+                    CASE bucket
+                        WHEN '<100ms' THEN 1
+                        WHEN '100-250ms' THEN 2
+                        WHEN '250-500ms' THEN 3
+                        WHEN '500ms-1s' THEN 4
+                        ELSE 5
+                    END
+            ");
+            $distribution = [];
+            while ($row = $stmt->fetch()) {
+                $distribution[] = [
+                    'bucket' => $row['bucket'],
+                    'count' => (int) $row['count'],
+                ];
+            }
+
+            // Get slowest requests
+            $stmt = $this->pdo->query("
+                SELECT path, method, response_time, status_code, created_at
+                FROM stats_requests
+                WHERE created_at >= datetime('now', '-24 hours')
+                ORDER BY response_time DESC
+                LIMIT 10
+            ");
+            $slowestRequests = [];
+            while ($row = $stmt->fetch()) {
+                $slowestRequests[] = [
+                    'path' => $row['path'],
+                    'method' => $row['method'],
+                    'response_time' => round((float) $row['response_time'], 2),
+                    'status_code' => (int) $row['status_code'],
+                    'created_at' => $row['created_at'],
+                ];
+            }
+
+            // Get average latency
+            $stmt = $this->pdo->query("
+                SELECT AVG(response_time) as avg
+                FROM stats_requests
+                WHERE created_at >= datetime('now', '-24 hours')
+            ");
+            $avgLatency = round((float) ($stmt->fetchColumn() ?: 0), 2);
+
+            return [
+                'avg_latency_24h' => $avgLatency,
+                'endpoints' => $endpoints,
+                'distribution' => $distribution,
+                'slowest_requests' => $slowestRequests,
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'avg_latency_24h' => 0,
+                'endpoints' => [],
+                'distribution' => [],
+                'slowest_requests' => [],
+            ];
+        }
+    }
+
+    /**
+     * Get API health status
+     */
+    public function getHealthStatus(): array
+    {
+        try {
+            $now = new \DateTime();
+
+            // Get request count last 5 minutes
+            $stmt = $this->pdo->query("
+                SELECT COUNT(*) FROM stats_requests
+                WHERE created_at >= datetime('now', '-5 minutes')
+            ");
+            $recentRequests = (int) $stmt->fetchColumn();
+
+            // Get error count last 5 minutes
+            $stmt = $this->pdo->query("
+                SELECT COUNT(*) FROM stats_requests
+                WHERE status_code >= 400
+                AND created_at >= datetime('now', '-5 minutes')
+            ");
+            $recentErrors = (int) $stmt->fetchColumn();
+
+            // Get average response time last 5 minutes
+            $stmt = $this->pdo->query("
+                SELECT AVG(response_time) FROM stats_requests
+                WHERE created_at >= datetime('now', '-5 minutes')
+            ");
+            $recentAvgTime = round((float) ($stmt->fetchColumn() ?: 0), 2);
+
+            // Calculate error rate
+            $errorRate = $recentRequests > 0 ? round(($recentErrors / $recentRequests) * 100, 2) : 0;
+
+            // Determine health status
+            $status = 'healthy';
+            $issues = [];
+
+            if ($errorRate > 10) {
+                $status = 'critical';
+                $issues[] = 'High error rate: ' . $errorRate . '%';
+            } elseif ($errorRate > 5) {
+                $status = 'degraded';
+                $issues[] = 'Elevated error rate: ' . $errorRate . '%';
+            }
+
+            if ($recentAvgTime > 1000) {
+                $status = $status === 'healthy' ? 'degraded' : $status;
+                $issues[] = 'High latency: ' . $recentAvgTime . 'ms';
+            } elseif ($recentAvgTime > 500) {
+                $status = $status === 'healthy' ? 'degraded' : $status;
+                $issues[] = 'Elevated latency: ' . $recentAvgTime . 'ms';
+            }
+
+            // Get endpoint health
+            $stmt = $this->pdo->query("
+                SELECT path, method, requests, errors,
+                    CASE WHEN requests > 0 THEN ROUND((errors * 100.0 / requests), 2) ELSE 0 END as error_rate,
+                    avg_time
+                FROM stats_endpoints
+                WHERE requests > 0
+                ORDER BY error_rate DESC, avg_time DESC
+                LIMIT 10
+            ");
+            $endpointHealth = [];
+            while ($row = $stmt->fetch()) {
+                $epStatus = 'healthy';
+                if ($row['error_rate'] > 10) {
+                    $epStatus = 'critical';
+                } elseif ($row['error_rate'] > 5 || $row['avg_time'] > 1000) {
+                    $epStatus = 'degraded';
+                }
+
+                $endpointHealth[] = [
+                    'path' => $row['path'],
+                    'method' => $row['method'],
+                    'requests' => (int) $row['requests'],
+                    'errors' => (int) $row['errors'],
+                    'error_rate' => (float) $row['error_rate'],
+                    'avg_time' => round((float) $row['avg_time'], 2),
+                    'status' => $epStatus,
+                ];
+            }
+
+            // Get database size
+            $dbPath = __DIR__ . '/../../data/plbot.db';
+            $dbSize = file_exists($dbPath) ? filesize($dbPath) : 0;
+
+            return [
+                'status' => $status,
+                'timestamp' => $now->format('Y-m-d H:i:s'),
+                'metrics' => [
+                    'requests_5m' => $recentRequests,
+                    'errors_5m' => $recentErrors,
+                    'error_rate' => $errorRate,
+                    'avg_response_time' => $recentAvgTime,
+                ],
+                'issues' => $issues,
+                'endpoint_health' => $endpointHealth,
+                'database' => [
+                    'size_bytes' => $dbSize,
+                    'size_human' => $this->formatBytes($dbSize),
+                ],
+                'uptime' => [
+                    'php_version' => PHP_VERSION,
+                    'memory_usage' => $this->formatBytes(memory_get_usage(true)),
+                    'memory_peak' => $this->formatBytes(memory_get_peak_usage(true)),
+                ],
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'status' => 'unknown',
+                'timestamp' => date('Y-m-d H:i:s'),
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    private function formatBytes(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB'];
+        $i = 0;
+        while ($bytes >= 1024 && $i < count($units) - 1) {
+            $bytes /= 1024;
+            $i++;
+        }
+        return round($bytes, 2) . ' ' . $units[$i];
+    }
 }

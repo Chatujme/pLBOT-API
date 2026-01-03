@@ -173,6 +173,90 @@ final class AdminController extends BaseController
         }
     }
 
+    #[Path('/stats/hourly')]
+    #[Method('GET')]
+    public function getHourlyStats(ApiRequest $request, ApiResponse $response): ApiResponse
+    {
+        try {
+            $stats = $this->statsService->getStats();
+            $byHour = $stats['byHour'] ?? [];
+
+            // Fill missing hours with zeros (last 24 hours)
+            $hourlyData = [];
+            $now = new \DateTime();
+            for ($i = 23; $i >= 0; $i--) {
+                $hour = (clone $now)->modify("-{$i} hours")->format('Y-m-d H:00');
+                $hourlyData[] = [
+                    'hour' => $hour,
+                    'label' => (clone $now)->modify("-{$i} hours")->format('H:00'),
+                    'requests' => $byHour[$hour] ?? 0,
+                ];
+            }
+
+            return $this->createSuccessResponse($response, [
+                'hourly' => $hourlyData,
+                'total' => array_sum(array_column($hourlyData, 'requests')),
+            ]);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse(
+                $response,
+                'Nepodařilo se načíst hodinové statistiky: ' . $e->getMessage(),
+                500
+            );
+        }
+    }
+
+    #[Path('/stats/errors')]
+    #[Method('GET')]
+    public function getErrorStats(ApiRequest $request, ApiResponse $response): ApiResponse
+    {
+        try {
+            $errorStats = $this->statsService->getErrorStats();
+
+            return $this->createSuccessResponse($response, $errorStats);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse(
+                $response,
+                'Nepodařilo se načíst chybové statistiky: ' . $e->getMessage(),
+                500
+            );
+        }
+    }
+
+    #[Path('/stats/latency')]
+    #[Method('GET')]
+    public function getLatencyStats(ApiRequest $request, ApiResponse $response): ApiResponse
+    {
+        try {
+            $latencyStats = $this->statsService->getLatencyStats();
+
+            return $this->createSuccessResponse($response, $latencyStats);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse(
+                $response,
+                'Nepodařilo se načíst latency statistiky: ' . $e->getMessage(),
+                500
+            );
+        }
+    }
+
+    #[Path('/health')]
+    #[Method('GET')]
+    public function getHealth(ApiRequest $request, ApiResponse $response): ApiResponse
+    {
+        try {
+            $health = $this->statsService->getHealthStatus();
+
+            return $this->createSuccessResponse($response, $health);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse(
+                $response,
+                'Health check failed: ' . $e->getMessage(),
+                500
+            );
+        }
+    }
+
     #[Path('/change-password')]
     #[Method('POST')]
     public function changePassword(ApiRequest $request, ApiResponse $response): ApiResponse

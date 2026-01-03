@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - pLBOT API</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --bg-primary: #0f172a;
@@ -390,6 +391,188 @@
             color: var(--accent-primary);
         }
 
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .charts-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .health-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .health-badge.healthy {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--accent-success);
+        }
+
+        .health-badge.degraded {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-warning);
+        }
+
+        .health-badge.critical {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-danger);
+        }
+
+        .health-badge.unknown {
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--text-muted);
+        }
+
+        .latency-heatmap {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .latency-cell {
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.85em;
+        }
+
+        .latency-cell.fast {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid var(--accent-success);
+        }
+
+        .latency-cell.normal {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid var(--accent-primary);
+        }
+
+        .latency-cell.slow {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid var(--accent-warning);
+        }
+
+        .latency-cell.very_slow {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--accent-danger);
+        }
+
+        .latency-cell .path {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .latency-cell .time {
+            font-weight: 700;
+            font-size: 1.2em;
+            margin-top: 5px;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .metric-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .metric-item {
+            background: var(--bg-tertiary);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-item .value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .metric-item .label {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .issues-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0 0 0;
+        }
+
+        .issues-list li {
+            padding: 10px 15px;
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid var(--accent-danger);
+            margin-bottom: 8px;
+            border-radius: 0 6px 6px 0;
+            color: var(--text-secondary);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .nav-tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 6px 6px 0 0;
+            transition: all 0.3s;
+            font-size: 0.95em;
+        }
+
+        .nav-tab:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-tab.active {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         .user-info {
             display: flex;
             align-items: center;
@@ -562,16 +745,238 @@
             </div>
         </div>
 
-        <div class="chart-card">
-            <h3><i class="fas fa-clock"></i> Historie požadavků (24h)</h3>
-            <div class="chart-placeholder">
-                <i class="fas fa-chart-area"></i>
-                Graf bude k dispozici po implementaci request loggingu
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('overview')"><i class="fas fa-chart-line"></i> Přehled</button>
+            <button class="nav-tab" onclick="showTab('latency')"><i class="fas fa-tachometer-alt"></i> Latence</button>
+            <button class="nav-tab" onclick="showTab('errors')"><i class="fas fa-exclamation-triangle"></i> Chyby</button>
+            <button class="nav-tab" onclick="showTab('health')"><i class="fas fa-heartbeat"></i> Health</button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="tab-overview" class="tab-content active">
+            <div class="charts-row">
+                <div class="chart-card">
+                    <h3><i class="fas fa-clock"></i> Požadavky za posledních 24 hodin</h3>
+                    <div class="chart-container">
+                        <canvas id="hourlyChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3><i class="fas fa-pie-chart"></i> Distribuce latence</h3>
+                    <div class="chart-container">
+                        <canvas id="latencyDistChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Latency Tab -->
+        <div id="tab-latency" class="tab-content">
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3><i class="fas fa-tachometer-alt"></i> Endpoint Latency Heatmap</h3>
+                    <button class="refresh-button" onclick="loadLatencyStats()">
+                        <i class="fas fa-sync-alt"></i> Obnovit
+                    </button>
+                </div>
+                <div id="latencyHeatmap" class="latency-heatmap">
+                    <div class="empty-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Načítání dat...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3><i class="fas fa-turtle"></i> Nejpomalejší požadavky (24h)</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Endpoint</th>
+                                <th>Metoda</th>
+                                <th>Čas</th>
+                                <th>Status</th>
+                                <th>Kdy</th>
+                            </tr>
+                        </thead>
+                        <tbody id="slowestRequestsBody">
+                            <tr><td colspan="6">
+                                <div class="empty-state">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Načítání dat...</p>
+                                </div>
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Errors Tab -->
+        <div id="tab-errors" class="tab-content">
+            <div class="charts-row">
+                <div class="chart-card">
+                    <h3><i class="fas fa-chart-bar"></i> Chyby za posledních 24 hodin</h3>
+                    <div class="chart-container">
+                        <canvas id="errorTrendChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3><i class="fas fa-tags"></i> Chyby podle status kódu</h3>
+                    <div class="chart-container">
+                        <canvas id="errorByStatusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3><i class="fas fa-list"></i> Endpointy s nejvíce chybami (24h)</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Endpoint</th>
+                                <th>Metoda</th>
+                                <th>Počet chyb</th>
+                            </tr>
+                        </thead>
+                        <tbody id="errorEndpointsBody">
+                            <tr><td colspan="4">
+                                <div class="empty-state">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Načítání dat...</p>
+                                </div>
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Tab -->
+        <div id="tab-health" class="tab-content">
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3><i class="fas fa-heartbeat"></i> API Health Status</h3>
+                    <span id="healthBadge" class="health-badge unknown">
+                        <i class="fas fa-question-circle"></i> Načítání...
+                    </span>
+                </div>
+
+                <div class="metric-grid" id="healthMetrics">
+                    <div class="metric-item">
+                        <div class="value" id="health-requests">-</div>
+                        <div class="label">Požadavky (5 min)</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="value" id="health-errors">-</div>
+                        <div class="label">Chyby (5 min)</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="value" id="health-error-rate">-</div>
+                        <div class="label">Error Rate</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="value" id="health-latency">-</div>
+                        <div class="label">Avg Latency</div>
+                    </div>
+                </div>
+
+                <div id="healthIssues"></div>
+            </div>
+
+            <div class="charts-row">
+                <div class="chart-card">
+                    <h3><i class="fas fa-server"></i> System Info</h3>
+                    <div class="metric-grid">
+                        <div class="metric-item">
+                            <div class="value" id="sys-php">-</div>
+                            <div class="label">PHP Version</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="value" id="sys-memory">-</div>
+                            <div class="label">Memory Usage</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="value" id="sys-peak">-</div>
+                            <div class="label">Peak Memory</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="value" id="sys-db">-</div>
+                            <div class="label">Database Size</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3><i class="fas fa-clock"></i> Last Updated</h3>
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 2em; color: var(--accent-primary);">
+                            <i class="fas fa-sync-alt"></i>
+                        </div>
+                        <div id="lastUpdate" style="font-size: 1.2em; margin-top: 10px; color: var(--text-secondary);">
+                            -
+                        </div>
+                        <button class="refresh-button" style="margin: 20px auto 0;" onclick="loadAllStats()">
+                            <i class="fas fa-sync-alt"></i> Obnovit vše
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3><i class="fas fa-stethoscope"></i> Endpoint Health</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Metoda</th>
+                                <th>Požadavky</th>
+                                <th>Chyby</th>
+                                <th>Error Rate</th>
+                                <th>Avg Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="endpointHealthBody">
+                            <tr><td colspan="7">
+                                <div class="empty-state">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Načítání dat...</p>
+                                </div>
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Chart instances
+        let hourlyChart = null;
+        let latencyDistChart = null;
+        let errorTrendChart = null;
+        let errorByStatusChart = null;
+
+        // Tab navigation
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.closest('.nav-tab').classList.add('active');
+
+            // Load tab-specific data
+            if (tabName === 'latency') loadLatencyStats();
+            if (tabName === 'errors') loadErrorStats();
+            if (tabName === 'health') loadHealthStats();
+        }
+
         async function loadStats() {
             try {
                 const response = await fetch('../admin/stats');
@@ -633,6 +1038,280 @@
             }
         }
 
+        async function loadHourlyChart() {
+            try {
+                const response = await fetch('../admin/stats/hourly');
+                const data = await response.json();
+
+                if (data.error) return;
+
+                const ctx = document.getElementById('hourlyChart').getContext('2d');
+
+                if (hourlyChart) hourlyChart.destroy();
+
+                hourlyChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.hourly.map(h => h.label),
+                        datasets: [{
+                            label: 'Požadavky',
+                            data: data.hourly.map(h => h.requests),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 3,
+                            pointHoverRadius: 6,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                        },
+                        scales: {
+                            x: {
+                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                ticks: { color: '#94a3b8' }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                ticks: { color: '#94a3b8' }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to load hourly chart:', error);
+            }
+        }
+
+        async function loadLatencyStats() {
+            try {
+                const response = await fetch('../admin/stats/latency');
+                const data = await response.json();
+
+                if (data.error) return;
+
+                // Render latency distribution chart
+                const ctx = document.getElementById('latencyDistChart').getContext('2d');
+                if (latencyDistChart) latencyDistChart.destroy();
+
+                latencyDistChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.distribution.map(d => d.bucket),
+                        datasets: [{
+                            data: data.distribution.map(d => d.count),
+                            backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#dc2626'],
+                            borderWidth: 0,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: '#94a3b8' }
+                            }
+                        }
+                    }
+                });
+
+                // Render heatmap
+                const heatmap = document.getElementById('latencyHeatmap');
+                if (data.endpoints && data.endpoints.length > 0) {
+                    heatmap.innerHTML = data.endpoints.slice(0, 20).map(ep => `
+                        <div class="latency-cell ${ep.latency_class}">
+                            <div class="path" title="${ep.path}">${ep.path}</div>
+                            <div class="time">${Math.round(ep.avg_time)} ms</div>
+                        </div>
+                    `).join('');
+                } else {
+                    heatmap.innerHTML = '<div class="empty-state"><i class="fas fa-chart-area"></i><p>Žádná data</p></div>';
+                }
+
+                // Render slowest requests
+                const tbody = document.getElementById('slowestRequestsBody');
+                if (data.slowest_requests && data.slowest_requests.length > 0) {
+                    tbody.innerHTML = data.slowest_requests.map((req, i) => `
+                        <tr>
+                            <td><strong>${i + 1}</strong></td>
+                            <td><span class="endpoint-path">${req.path}</span></td>
+                            <td><span class="method-badge method-${req.method.toLowerCase()}">${req.method}</span></td>
+                            <td><span class="time-badge time-max">${Math.round(req.response_time)} ms</span></td>
+                            <td>${req.status_code}</td>
+                            <td>${new Date(req.created_at).toLocaleString('cs-CZ')}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>Žádné pomalé požadavky</p></div></td></tr>';
+                }
+            } catch (error) {
+                console.error('Failed to load latency stats:', error);
+            }
+        }
+
+        async function loadErrorStats() {
+            try {
+                const response = await fetch('../admin/stats/errors');
+                const data = await response.json();
+
+                if (data.error) return;
+
+                // Error trend chart
+                const trendCtx = document.getElementById('errorTrendChart').getContext('2d');
+                if (errorTrendChart) errorTrendChart.destroy();
+
+                errorTrendChart = new Chart(trendCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.hourly_trend.map(h => h.label),
+                        datasets: [{
+                            label: 'Chyby',
+                            data: data.hourly_trend.map(h => h.errors),
+                            backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                            borderColor: '#ef4444',
+                            borderWidth: 1,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: {
+                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                ticks: { color: '#94a3b8' }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                ticks: { color: '#94a3b8' }
+                            }
+                        }
+                    }
+                });
+
+                // Error by status code chart
+                const statusCtx = document.getElementById('errorByStatusChart').getContext('2d');
+                if (errorByStatusChart) errorByStatusChart.destroy();
+
+                if (data.by_status_code.length > 0) {
+                    errorByStatusChart = new Chart(statusCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: data.by_status_code.map(s => `HTTP ${s.status_code}`),
+                            datasets: [{
+                                data: data.by_status_code.map(s => s.count),
+                                backgroundColor: ['#ef4444', '#f59e0b', '#dc2626', '#fb923c', '#fbbf24'],
+                                borderWidth: 0,
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { color: '#94a3b8' }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Error endpoints table
+                const tbody = document.getElementById('errorEndpointsBody');
+                if (data.by_endpoint && data.by_endpoint.length > 0) {
+                    tbody.innerHTML = data.by_endpoint.map((ep, i) => `
+                        <tr>
+                            <td><strong>${i + 1}</strong></td>
+                            <td><span class="endpoint-path">${ep.path}</span></td>
+                            <td><span class="method-badge method-${ep.method.toLowerCase()}">${ep.method}</span></td>
+                            <td><strong style="color: var(--accent-danger);">${ep.errors}</strong></td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-check-circle" style="color: var(--accent-success);"></i><p>Žádné chyby za posledních 24 hodin!</p></div></td></tr>';
+                }
+            } catch (error) {
+                console.error('Failed to load error stats:', error);
+            }
+        }
+
+        async function loadHealthStats() {
+            try {
+                const response = await fetch('../admin/health');
+                const data = await response.json();
+
+                if (data.error) return;
+
+                // Health badge
+                const badge = document.getElementById('healthBadge');
+                const icons = { healthy: 'check-circle', degraded: 'exclamation-triangle', critical: 'times-circle', unknown: 'question-circle' };
+                const labels = { healthy: 'Healthy', degraded: 'Degraded', critical: 'Critical', unknown: 'Unknown' };
+                badge.className = `health-badge ${data.status}`;
+                badge.innerHTML = `<i class="fas fa-${icons[data.status]}"></i> ${labels[data.status]}`;
+
+                // Metrics
+                document.getElementById('health-requests').textContent = data.metrics.requests_5m;
+                document.getElementById('health-errors').textContent = data.metrics.errors_5m;
+                document.getElementById('health-error-rate').textContent = data.metrics.error_rate + '%';
+                document.getElementById('health-latency').textContent = Math.round(data.metrics.avg_response_time) + ' ms';
+
+                // Issues
+                const issuesDiv = document.getElementById('healthIssues');
+                if (data.issues && data.issues.length > 0) {
+                    issuesDiv.innerHTML = `<ul class="issues-list">${data.issues.map(i => `<li><i class="fas fa-exclamation-circle"></i> ${i}</li>`).join('')}</ul>`;
+                } else {
+                    issuesDiv.innerHTML = '<p style="color: var(--accent-success); margin-top: 15px;"><i class="fas fa-check-circle"></i> Žádné problémy</p>';
+                }
+
+                // System info
+                document.getElementById('sys-php').textContent = data.uptime.php_version;
+                document.getElementById('sys-memory').textContent = data.uptime.memory_usage;
+                document.getElementById('sys-peak').textContent = data.uptime.memory_peak;
+                document.getElementById('sys-db').textContent = data.database.size_human;
+
+                // Last update
+                document.getElementById('lastUpdate').textContent = data.timestamp;
+
+                // Endpoint health table
+                const tbody = document.getElementById('endpointHealthBody');
+                if (data.endpoint_health && data.endpoint_health.length > 0) {
+                    tbody.innerHTML = data.endpoint_health.map(ep => {
+                        const statusClass = ep.status === 'healthy' ? 'status-ok' : (ep.status === 'degraded' ? 'status-warning' : 'status-error');
+                        return `
+                        <tr>
+                            <td><span class="endpoint-path">${ep.path}</span></td>
+                            <td><span class="method-badge method-${ep.method.toLowerCase()}">${ep.method}</span></td>
+                            <td>${ep.requests}</td>
+                            <td>${ep.errors}</td>
+                            <td>${ep.error_rate}%</td>
+                            <td><span class="time-badge">${Math.round(ep.avg_time)} ms</span></td>
+                            <td><span class="status-indicator ${statusClass}"></span> ${ep.status}</td>
+                        </tr>
+                    `}).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>Žádná data</p></div></td></tr>';
+                }
+            } catch (error) {
+                console.error('Failed to load health stats:', error);
+            }
+        }
+
+        function loadAllStats() {
+            loadStats();
+            loadHourlyChart();
+            loadLatencyStats();
+            loadErrorStats();
+            loadHealthStats();
+        }
+
         function showEmptyState() {
             document.getElementById('totalRequests').textContent = '0';
             document.getElementById('successRate').textContent = '100%';
@@ -684,7 +1363,12 @@
         // Initialize
         if (checkAuth()) {
             loadStats();
-            setInterval(loadStats, 10000);
+            loadHourlyChart();
+            loadLatencyStats();
+            setInterval(() => {
+                loadStats();
+                loadHourlyChart();
+            }, 30000);
         }
     </script>
 </body>
