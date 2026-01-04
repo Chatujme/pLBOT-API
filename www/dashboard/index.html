@@ -901,7 +901,7 @@
                         <thead>
                             <tr>
                                 <th>Typ</th>
-                                <th>Browser/Bot</th>
+                                <th>User Agent</th>
                                 <th>Požadavky</th>
                                 <th>Unikátní IP</th>
                                 <th>Chyby</th>
@@ -1479,10 +1479,13 @@
                     uaBody.innerHTML = uaData.by_user_agent.map(ua => {
                         const typeClass = ua.type === 'bot' ? 'accent-warning' : (ua.type === 'browser' ? 'accent-success' : 'text-muted');
                         const typeIcon = ua.type === 'bot' ? 'robot' : (ua.type === 'browser' ? 'globe' : 'question');
+                        // Show full user agent, truncate if too long for display
+                        const fullUA = ua.user_agent || ua.browser;
+                        const displayUA = fullUA.length > 80 ? fullUA.substring(0, 80) + '...' : fullUA;
                         return `
-                        <tr>
+                        <tr title="${fullUA.replace(/"/g, '&quot;')}">
                             <td><i class="fas fa-${typeIcon}" style="color: var(--${typeClass});"></i> ${ua.type}</td>
-                            <td><strong>${ua.browser}</strong></td>
+                            <td style="font-family: monospace; font-size: 0.85em; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${displayUA}</td>
                             <td><strong>${ua.requests}</strong></td>
                             <td>${ua.unique_ips}</td>
                             <td>${ua.errors > 0 ? `<span style="color: var(--accent-danger);">${ua.errors}</span>` : '0'}</td>
