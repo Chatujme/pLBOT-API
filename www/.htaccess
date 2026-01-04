@@ -15,7 +15,8 @@
 # enable cool URL
 <IfModule mod_rewrite.c>
 	RewriteEngine On
-	RewriteBase /pLBOT-API/www/
+	# Local: /pLBOT-API/www/ | Production: /
+	RewriteBase /
 
 	# Handle OPTIONS requests
 	RewriteCond %{REQUEST_METHOD} OPTIONS
