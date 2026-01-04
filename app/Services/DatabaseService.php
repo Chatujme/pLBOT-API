@@ -13,10 +13,13 @@ use PDOException;
 final class DatabaseService
 {
     private PDO $pdo;
-    private const DB_FILE = __DIR__ . '/../../data/plbot.db';
+    private string $dbFile;
 
     public function __construct()
     {
+        // Use realpath to get absolute path within allowed directories
+        $appDir = dirname(__DIR__);
+        $this->dbFile = dirname($appDir) . '/data/plbot.db';
         $this->initDatabase();
     }
 
@@ -27,12 +30,12 @@ final class DatabaseService
 
     private function initDatabase(): void
     {
-        $dbDir = dirname(self::DB_FILE);
+        $dbDir = dirname($this->dbFile);
         if (!is_dir($dbDir)) {
             mkdir($dbDir, 0755, true);
         }
 
-        $this->pdo = new PDO('sqlite:' . self::DB_FILE);
+        $this->pdo = new PDO('sqlite:' . $this->dbFile);
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $this->pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
