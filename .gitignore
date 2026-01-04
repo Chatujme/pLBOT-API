@@ -5,3 +5,4 @@ composer.lock
 /data/*.db
 /vendor/
 composer.phar
+CLAUDE.md
