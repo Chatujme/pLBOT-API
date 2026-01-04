@@ -2,3 +2,6 @@
 app/config/config.local.neon
 /nbproject
 composer.lock
+/data/*.db
+/vendor/
+composer.phar
