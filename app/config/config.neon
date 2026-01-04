@@ -51,6 +51,7 @@ services:
 	- App\Services\UrlShortenerService
 	- App\Services\HashService
 	- App\Services\NewsRssService
+	- App\Services\NovinkyTimelineService
 	- App\Services\ImageService
 	- App\Services\StatsService
 	- App\Services\AuthService
