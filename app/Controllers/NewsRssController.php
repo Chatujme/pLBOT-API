@@ -13,13 +13,15 @@ use Apitte\Core\Annotation\Controller\Response as ApiResponse;
 use Apitte\Core\Http\ApiRequest;
 use Apitte\Core\Http\ApiResponse as HttpApiResponse;
 use App\Services\NewsRssService;
+use App\Services\NovinkyTimelineService;
 
 #[Path('/news')]
 #[Tag('České zprávy (RSS)')]
 final class NewsRssController extends BaseController
 {
     public function __construct(
-        private readonly NewsRssService $newsRssService
+        private readonly NewsRssService $newsRssService,
+        private readonly NovinkyTimelineService $timelineService
     ) {
     }
 
@@ -104,6 +106,27 @@ final class NewsRssController extends BaseController
                 return $this->createErrorResponse($response, $e->getMessage(), 400);
             }
             return $this->createErrorResponse($response, $e->getMessage(), 500);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 500);
+        }
+    }
+
+    #[Path('/timeline')]
+    #[Method('GET')]
+    #[RequestParameter(name: 'limit', type: 'int', in: 'query', required: false, description: 'Maximální počet zpráv (1-50, výchozí: 20)')]
+    #[ApiResponse(code: '200', description: 'Seznam zpráv z Novinky.cz "Stalo se" timeline')]
+    #[ApiResponse(code: '500', description: 'Interní chyba serveru')]
+    public function getTimeline(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
+    {
+        try {
+            $limit = $request->getParameter('limit', 20);
+
+            if (!is_numeric($limit)) {
+                return $this->createErrorResponse($response, 'Parametr "limit" musí být číslo', 400);
+            }
+
+            $data = $this->timelineService->getTimeline((int) $limit);
+            return $this->createSuccessResponse($response, $data);
         } catch (\Exception $e) {
             return $this->createErrorResponse($response, $e->getMessage(), 500);
         }

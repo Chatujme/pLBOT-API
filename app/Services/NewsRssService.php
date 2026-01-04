@@ -53,13 +53,14 @@ final class NewsRssService
     /**
      * Získá seznam všech dostupných RSS zdrojů
      *
-     * @return array{sources: array<string, array{name: string, description: string}>}
+     * @return array{sources: array<string, array{slug: string, name: string, description: string}>}
      */
     public function getAllSources(): array
     {
         $sources = [];
         foreach (self::RSS_SOURCES as $key => $source) {
             $sources[$key] = [
+                'slug' => $key,
                 'name' => $source['name'],
                 'description' => $source['description'],
             ];
