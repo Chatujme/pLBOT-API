@@ -193,6 +193,7 @@ final class StatsService
                     'topEndpoints' => $topEndpoints,
                     'categories' => $categories,
                     'byHour' => $byHour,
+                    'cacheInfo' => $this->getCacheInfo(),
                 ];
 
             } catch (\Exception $e) {
@@ -904,5 +905,44 @@ final class StatsService
         }
 
         return ['type' => $type, 'browser' => $browser];
+    }
+
+    /**
+     * Get cache configuration info for all endpoints
+     */
+    public function getCacheInfo(): array
+    {
+        return [
+            ['endpoint' => '/advice', 'ttl' => '1 hour', 'description' => 'Náhodné rady'],
+            ['endpoint' => '/ares/*', 'ttl' => '1 month', 'description' => 'ARES registr firem'],
+            ['endpoint' => '/bored', 'ttl' => '1 hour', 'description' => 'Návrhy aktivit'],
+            ['endpoint' => '/catfact', 'ttl' => 'none', 'description' => 'Fakta o kočkách (náhodné)'],
+            ['endpoint' => '/chucknorris', 'ttl' => '1 hour', 'description' => 'Chuck Norris vtipy'],
+            ['endpoint' => '/cnb/kurzy', 'ttl' => '12 hours', 'description' => 'ČNB kurzy měn'],
+            ['endpoint' => '/countries/*', 'ttl' => '1 week', 'description' => 'Info o zemích'],
+            ['endpoint' => '/crypto/*', 'ttl' => '5 minutes', 'description' => 'Kryptoměny'],
+            ['endpoint' => '/dog', 'ttl' => 'none', 'description' => 'Obrázky psů (náhodné)'],
+            ['endpoint' => '/fox', 'ttl' => 'none', 'description' => 'Obrázky lišek (náhodné)'],
+            ['endpoint' => '/hash', 'ttl' => 'none', 'description' => 'Hash výpočty'],
+            ['endpoint' => '/horoskop/*', 'ttl' => '1 day', 'description' => 'Horoskopy'],
+            ['endpoint' => '/image/*', 'ttl' => 'none', 'description' => 'Manipulace s obrázky'],
+            ['endpoint' => '/iss/position', 'ttl' => '1 minute', 'description' => 'Pozice ISS'],
+            ['endpoint' => '/iss/astronauts', 'ttl' => '1 hour', 'description' => 'Astronauti na ISS'],
+            ['endpoint' => '/joke', 'ttl' => 'none', 'description' => 'Vtipy (náhodné)'],
+            ['endpoint' => '/mistnost/*', 'ttl' => '5 minutes', 'description' => 'Chatujme místnosti'],
+            ['endpoint' => '/news/*', 'ttl' => '15 minutes', 'description' => 'České zprávy (RSS)'],
+            ['endpoint' => '/numbers/*', 'ttl' => '1 day', 'description' => 'Zajímavosti o číslech'],
+            ['endpoint' => '/pocasi/*', 'ttl' => '2 hours', 'description' => 'Předpověď počasí'],
+            ['endpoint' => '/qr/*', 'ttl' => 'none', 'description' => 'QR kódy'],
+            ['endpoint' => '/quotes', 'ttl' => 'none', 'description' => 'Citáty (náhodné)'],
+            ['endpoint' => '/ruian/*', 'ttl' => '1 week', 'description' => 'Registr adres'],
+            ['endpoint' => '/svatky/*', 'ttl' => '1 day', 'description' => 'Svátky'],
+            ['endpoint' => '/trivia', 'ttl' => 'none', 'description' => 'Trivia otázky (náhodné)'],
+            ['endpoint' => '/tv/*', 'ttl' => '1 hour', 'description' => 'TV program'],
+            ['endpoint' => '/url/shorten', 'ttl' => '1 month', 'description' => 'Zkracování URL'],
+            ['endpoint' => '/uuid', 'ttl' => 'none', 'description' => 'UUID generátor'],
+            ['endpoint' => '/vat/*', 'ttl' => '1 day', 'description' => 'EU VAT validace'],
+            ['endpoint' => '/zasilkovna/*', 'ttl' => '1 hour', 'description' => 'Sledování zásilek'],
+        ];
     }
 }
