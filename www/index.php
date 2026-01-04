@@ -26,6 +26,11 @@ register_shutdown_function(function () use ($container, $startTime, $originalUri
         // Remove base path for cleaner stats
         $cleanPath = str_replace('/pLBOT-API/www', '', $path) ?: '/';
 
+        // Skip logging for admin endpoints
+        if (str_starts_with($cleanPath, '/admin')) {
+            return;
+        }
+
         // Get response code from headers if possible
         $statusCode = http_response_code() ?: 200;
 
