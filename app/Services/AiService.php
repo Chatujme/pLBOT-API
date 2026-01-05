@@ -167,7 +167,7 @@ final class AiService
     }
 
     /**
-     * Smart chat - tries Gemini first, falls back to Groq on rate limit.
+     * Smart chat - tries Gemini first, falls back to Groq, then OpenRouter.
      */
     public function smartChat(
         string $message,
@@ -175,9 +175,7 @@ final class AiService
         float $temperature = 0.7,
         int $maxTokens = 1024
     ): array {
-        $usedProvider = 'gemini';
-        $fallbackUsed = false;
-        $fallbackReason = null;
+        $errors = [];
 
         // Try Gemini first
         if ($this->geminiApiKey) {
@@ -191,29 +189,10 @@ final class AiService
                 ];
                 return $result;
             } catch (\Exception $e) {
-                $errorMessage = $e->getMessage();
-                // Check for rate limit or quota errors
-                if (
-                    stripos($errorMessage, 'rate') !== false ||
-                    stripos($errorMessage, 'quota') !== false ||
-                    stripos($errorMessage, '429') !== false ||
-                    stripos($errorMessage, 'limit') !== false ||
-                    stripos($errorMessage, 'exhausted') !== false
-                ) {
-                    $fallbackUsed = true;
-                    $fallbackReason = 'Gemini rate limit: ' . $errorMessage;
-                    $usedProvider = 'groq';
-                } else {
-                    // Other error - still try fallback
-                    $fallbackUsed = true;
-                    $fallbackReason = 'Gemini error: ' . $errorMessage;
-                    $usedProvider = 'groq';
-                }
+                $errors['gemini'] = $e->getMessage();
             }
         } else {
-            $fallbackUsed = true;
-            $fallbackReason = 'Gemini API key not configured';
-            $usedProvider = 'groq';
+            $errors['gemini'] = 'API key not configured';
         }
 
         // Fallback to Groq
@@ -223,16 +202,36 @@ final class AiService
                 $result['smart_routing'] = [
                     'primary_provider' => 'gemini',
                     'used_provider' => 'groq',
-                    'fallback_used' => $fallbackUsed,
-                    'fallback_reason' => $fallbackReason,
+                    'fallback_used' => true,
+                    'fallback_reason' => 'Gemini: ' . $errors['gemini'],
                 ];
                 return $result;
             } catch (\Exception $e) {
-                throw new \RuntimeException('Oba provideři selhali. Gemini: ' . ($fallbackReason ?? 'N/A') . ', Groq: ' . $e->getMessage());
+                $errors['groq'] = $e->getMessage();
             }
+        } else {
+            $errors['groq'] = 'API key not configured';
         }
 
-        throw new \RuntimeException('Žádný AI provider není dostupný');
+        // Final fallback to OpenRouter
+        if ($this->openrouterApiKey) {
+            try {
+                $result = $this->chatOpenRouter($message, null, $systemPrompt, $temperature, $maxTokens);
+                $result['smart_routing'] = [
+                    'primary_provider' => 'gemini',
+                    'used_provider' => 'openrouter',
+                    'fallback_used' => true,
+                    'fallback_reason' => 'Gemini: ' . $errors['gemini'] . ', Groq: ' . $errors['groq'],
+                ];
+                return $result;
+            } catch (\Exception $e) {
+                $errors['openrouter'] = $e->getMessage();
+            }
+        } else {
+            $errors['openrouter'] = 'API key not configured';
+        }
+
+        throw new \RuntimeException('Všichni provideři selhali. ' . json_encode($errors));
     }
 
     /**
