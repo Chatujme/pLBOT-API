@@ -16,6 +16,10 @@ use App\Services\TwitchService;
 /**
  * Controller for Twitch API endpoints
  * Provides access to streams, channels, games, and user data from Twitch
+ *
+ * Authentication: Uses OAuth 2.0 Client Credentials flow (server-side).
+ * Rate Limits: Twitch API has rate limits. Responses are cached for 2-10 minutes.
+ * Note: Some data (subscriber count, chat viewers) requires user OAuth token.
  */
 #[Path('/twitch')]
 #[Tag('Twitch')]
@@ -26,14 +30,20 @@ final class TwitchController extends BaseController
     ) {
     }
 
+    /**
+     * Get live streams
+     * Returns list of currently live streams sorted by viewer count.
+     * Supports filtering by language, game and pagination.
+     */
     #[Path('/streams')]
     #[Method('GET')]
     #[RequestParameter(name: 'limit', type: 'int', in: 'query', required: false, description: 'Number of streams (1-100, default: 20)')]
-    #[RequestParameter(name: 'language', type: 'string', in: 'query', required: false, description: 'Language filter (ISO 639-1, e.g., cs, en)')]
+    #[RequestParameter(name: 'language', type: 'string', in: 'query', required: false, description: 'Language filter (ISO 639-1, e.g., cs, en, de)')]
     #[RequestParameter(name: 'game_id', type: 'string', in: 'query', required: false, description: 'Filter by game ID')]
-    #[RequestParameter(name: 'cursor', type: 'string', in: 'query', required: false, description: 'Pagination cursor')]
-    #[ApiResponse(code: '200', description: 'List of live streams')]
-    #[ApiResponse(code: '500', description: 'Internal server error')]
+    #[RequestParameter(name: 'cursor', type: 'string', in: 'query', required: false, description: 'Pagination cursor for next page')]
+    #[ApiResponse(code: '200', description: 'List of live streams with pagination')]
+    #[ApiResponse(code: '400', description: 'Invalid request parameters')]
+    #[ApiResponse(code: '500', description: 'Internal server error or Twitch API error')]
     public function getStreams(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
@@ -51,6 +61,10 @@ final class TwitchController extends BaseController
         }
     }
 
+    /**
+     * Get Czech live streams
+     * Returns list of currently live streams in Czech language, sorted by viewer count.
+     */
     #[Path('/streams/czech')]
     #[Method('GET')]
     #[RequestParameter(name: 'limit', type: 'int', in: 'query', required: false, description: 'Number of streams (1-100, default: 20)')]
@@ -70,6 +84,10 @@ final class TwitchController extends BaseController
         }
     }
 
+    /**
+     * Get top games/categories
+     * Returns list of most popular games/categories on Twitch sorted by current viewer count.
+     */
     #[Path('/games/top')]
     #[Method('GET')]
     #[RequestParameter(name: 'limit', type: 'int', in: 'query', required: false, description: 'Number of games (1-100, default: 20)')]
@@ -91,13 +109,17 @@ final class TwitchController extends BaseController
         }
     }
 
+    /**
+     * Search channels
+     * Search for channels by name or description. Returns channels that have streamed within the past 6 months.
+     */
     #[Path('/search/channels')]
     #[Method('GET')]
-    #[RequestParameter(name: 'query', type: 'string', in: 'query', required: true, description: 'Search query')]
+    #[RequestParameter(name: 'query', type: 'string', in: 'query', required: true, description: 'Search query (channel name or description)')]
     #[RequestParameter(name: 'limit', type: 'int', in: 'query', required: false, description: 'Number of results (1-100, default: 20)')]
-    #[RequestParameter(name: 'live_only', type: 'bool', in: 'query', required: false, description: 'Show only live channels')]
+    #[RequestParameter(name: 'live_only', type: 'bool', in: 'query', required: false, description: 'Show only currently live channels')]
     #[ApiResponse(code: '200', description: 'List of channels matching the search query')]
-    #[ApiResponse(code: '400', description: 'Invalid request')]
+    #[ApiResponse(code: '400', description: 'Missing or invalid query parameter')]
     #[ApiResponse(code: '500', description: 'Internal server error')]
     public function searchChannels(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
@@ -119,12 +141,16 @@ final class TwitchController extends BaseController
         }
     }
 
+    /**
+     * Search games/categories
+     * Search for games or categories by name.
+     */
     #[Path('/search/games')]
     #[Method('GET')]
-    #[RequestParameter(name: 'query', type: 'string', in: 'query', required: true, description: 'Search query')]
+    #[RequestParameter(name: 'query', type: 'string', in: 'query', required: true, description: 'Search query (game name)')]
     #[RequestParameter(name: 'limit', type: 'int', in: 'query', required: false, description: 'Number of results (1-100, default: 20)')]
     #[ApiResponse(code: '200', description: 'List of games/categories matching the search query')]
-    #[ApiResponse(code: '400', description: 'Invalid request')]
+    #[ApiResponse(code: '400', description: 'Missing or invalid query parameter')]
     #[ApiResponse(code: '500', description: 'Internal server error')]
     public function searchGames(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
@@ -145,10 +171,14 @@ final class TwitchController extends BaseController
         }
     }
 
+    /**
+     * Get user information
+     * Returns detailed information about a Twitch user including profile, broadcaster type, and follower count.
+     */
     #[Path('/user/{login}')]
     #[Method('GET')]
-    #[RequestParameter(name: 'login', type: 'string', in: 'path', required: true, description: 'User login name')]
-    #[ApiResponse(code: '200', description: 'User information')]
+    #[RequestParameter(name: 'login', type: 'string', in: 'path', required: true, description: 'User login name (lowercase username)')]
+    #[ApiResponse(code: '200', description: 'User information with follower count')]
     #[ApiResponse(code: '404', description: 'User not found')]
     #[ApiResponse(code: '500', description: 'Internal server error')]
     public function getUser(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
@@ -166,6 +196,10 @@ final class TwitchController extends BaseController
         }
     }
 
+    /**
+     * Get channel status
+     * Returns channel information with live status. If the channel is live, includes current stream details.
+     */
     #[Path('/channel/{login}/status')]
     #[Method('GET')]
     #[RequestParameter(name: 'login', type: 'string', in: 'path', required: true, description: 'Channel login name')]
@@ -187,9 +221,13 @@ final class TwitchController extends BaseController
         }
     }
 
+    /**
+     * Get game information
+     * Returns information about a specific game/category by name.
+     */
     #[Path('/game/{name}')]
     #[Method('GET')]
-    #[RequestParameter(name: 'name', type: 'string', in: 'path', required: true, description: 'Game name')]
+    #[RequestParameter(name: 'name', type: 'string', in: 'path', required: true, description: 'Game name (exact match)')]
     #[ApiResponse(code: '200', description: 'Game information')]
     #[ApiResponse(code: '404', description: 'Game not found')]
     #[ApiResponse(code: '500', description: 'Internal server error')]
@@ -208,9 +246,13 @@ final class TwitchController extends BaseController
         }
     }
 
+    /**
+     * Get streams by game
+     * Returns list of live streams for a specific game/category.
+     */
     #[Path('/game/{game_id}/streams')]
     #[Method('GET')]
-    #[RequestParameter(name: 'game_id', type: 'string', in: 'path', required: true, description: 'Game ID')]
+    #[RequestParameter(name: 'game_id', type: 'string', in: 'path', required: true, description: 'Game ID (numeric)')]
     #[RequestParameter(name: 'limit', type: 'int', in: 'query', required: false, description: 'Number of streams (1-100, default: 20)')]
     #[RequestParameter(name: 'language', type: 'string', in: 'query', required: false, description: 'Language filter (ISO 639-1)')]
     #[ApiResponse(code: '200', description: 'List of streams for the specified game')]
@@ -231,9 +273,13 @@ final class TwitchController extends BaseController
         }
     }
 
+    /**
+     * Get channel clips
+     * Returns most viewed clips for a channel, sorted by view count.
+     */
     #[Path('/channel/{broadcaster_id}/clips')]
     #[Method('GET')]
-    #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'path', required: true, description: 'Broadcaster ID')]
+    #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'path', required: true, description: 'Broadcaster user ID (numeric)')]
     #[RequestParameter(name: 'limit', type: 'int', in: 'query', required: false, description: 'Number of clips (1-100, default: 20)')]
     #[ApiResponse(code: '200', description: 'List of clips for the broadcaster')]
     #[ApiResponse(code: '500', description: 'Internal server error')]
@@ -252,11 +298,15 @@ final class TwitchController extends BaseController
         }
     }
 
+    /**
+     * Get channel videos (VODs)
+     * Returns videos for a channel including archives, highlights, and uploads.
+     */
     #[Path('/channel/{broadcaster_id}/videos')]
     #[Method('GET')]
-    #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'path', required: true, description: 'Broadcaster ID')]
+    #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'path', required: true, description: 'Broadcaster user ID (numeric)')]
     #[RequestParameter(name: 'limit', type: 'int', in: 'query', required: false, description: 'Number of videos (1-100, default: 20)')]
-    #[RequestParameter(name: 'type', type: 'string', in: 'query', required: false, description: 'Video type (all, archive, highlight, upload)')]
+    #[RequestParameter(name: 'type', type: 'string', in: 'query', required: false, description: 'Video type: all, archive, highlight, upload')]
     #[ApiResponse(code: '200', description: 'List of videos for the broadcaster')]
     #[ApiResponse(code: '500', description: 'Internal server error')]
     public function getChannelVideos(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
@@ -275,10 +325,15 @@ final class TwitchController extends BaseController
         }
     }
 
+    /**
+     * Get channel schedule
+     * Returns the streaming schedule for a channel. Returns 404 if no schedule configured.
+     */
     #[Path('/channel/{broadcaster_id}/schedule')]
     #[Method('GET')]
-    #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'path', required: true, description: 'Broadcaster ID')]
+    #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'path', required: true, description: 'Broadcaster user ID (numeric)')]
     #[ApiResponse(code: '200', description: 'Channel stream schedule')]
+    #[ApiResponse(code: '400', description: 'Channel has no schedule')]
     #[ApiResponse(code: '500', description: 'Internal server error')]
     public function getChannelSchedule(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
@@ -294,10 +349,14 @@ final class TwitchController extends BaseController
         }
     }
 
+    /**
+     * Get channel emotes
+     * Returns all subscriber emotes for a channel, organized by tier.
+     */
     #[Path('/channel/{broadcaster_id}/emotes')]
     #[Method('GET')]
-    #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'path', required: true, description: 'Broadcaster ID')]
-    #[ApiResponse(code: '200', description: 'List of channel emotes')]
+    #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'path', required: true, description: 'Broadcaster user ID (numeric)')]
+    #[ApiResponse(code: '200', description: 'List of channel emotes with image URLs')]
     #[ApiResponse(code: '500', description: 'Internal server error')]
     public function getChannelEmotes(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
@@ -313,9 +372,13 @@ final class TwitchController extends BaseController
         }
     }
 
+    /**
+     * Get channel badges
+     * Returns all chat badges for a channel (subscriber badges, bits badges, etc.).
+     */
     #[Path('/channel/{broadcaster_id}/badges')]
     #[Method('GET')]
-    #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'path', required: true, description: 'Broadcaster ID')]
+    #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'path', required: true, description: 'Broadcaster user ID (numeric)')]
     #[ApiResponse(code: '200', description: 'List of channel chat badges')]
     #[ApiResponse(code: '500', description: 'Internal server error')]
     public function getChannelBadges(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
@@ -332,6 +395,10 @@ final class TwitchController extends BaseController
         }
     }
 
+    /**
+     * Get global emotes
+     * Returns all global Twitch emotes available to all users.
+     */
     #[Path('/emotes/global')]
     #[Method('GET')]
     #[ApiResponse(code: '200', description: 'List of global Twitch emotes')]
@@ -348,6 +415,10 @@ final class TwitchController extends BaseController
         }
     }
 
+    /**
+     * Get cheermotes (bit emotes)
+     * Returns available cheermotes with all tiers and image URLs.
+     */
     #[Path('/cheermotes')]
     #[Method('GET')]
     #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'query', required: false, description: 'Optional broadcaster ID for channel-specific cheermotes')]
@@ -367,9 +438,13 @@ final class TwitchController extends BaseController
         }
     }
 
+    /**
+     * Get game clips
+     * Returns most viewed clips for a specific game/category.
+     */
     #[Path('/game/{game_id}/clips')]
     #[Method('GET')]
-    #[RequestParameter(name: 'game_id', type: 'string', in: 'path', required: true, description: 'Game ID')]
+    #[RequestParameter(name: 'game_id', type: 'string', in: 'path', required: true, description: 'Game ID (numeric)')]
     #[RequestParameter(name: 'limit', type: 'int', in: 'query', required: false, description: 'Number of clips (1-100, default: 20)')]
     #[ApiResponse(code: '200', description: 'List of clips for the game')]
     #[ApiResponse(code: '500', description: 'Internal server error')]
