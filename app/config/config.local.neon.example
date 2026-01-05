@@ -1,0 +1,8 @@
+# Local configuration example
+# Copy this file to config.local.neon and fill in your credentials
+
+parameters:
+    # Twitch API credentials (https://dev.twitch.tv/console/apps)
+    env:
+        TWITCH_CLIENT_ID: 'your_twitch_client_id_here'
+        TWITCH_CLIENT_SECRET: 'your_twitch_client_secret_here'

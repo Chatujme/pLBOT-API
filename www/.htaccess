@@ -16,7 +16,7 @@
 <IfModule mod_rewrite.c>
 	RewriteEngine On
 	# Local: /pLBOT-API/www/ | Production: /
-	RewriteBase /
+	RewriteBase /pLBOT-API/www/
 
 	# Handle OPTIONS requests
 	RewriteCond %{REQUEST_METHOD} OPTIONS

@@ -1,5 +1,6 @@
 !.gitignore
 app/config/config.local.neon
+app/config/twitch.json
 /nbproject
 composer.lock
 /data/*.db
