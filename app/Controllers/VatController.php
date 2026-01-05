@@ -58,7 +58,7 @@ final class VatController extends BaseController
     public function checkFullVat(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
     {
         try {
-            $fullVat = $request->getParameter('fullVat');
+            $fullVat = trim($request->getParameter('fullVat') ?? '');
 
             if (empty($fullVat)) {
                 return $this->createErrorResponse($response, 'VAT číslo je povinné', 400);
