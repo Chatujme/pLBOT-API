@@ -56,6 +56,7 @@ services:
 	- App\Services\StatsService
 	- App\Services\AuthService
 	- App\Services\TwitchService
+	- App\Services\AiService
 
 	# Middlewares with tags for Contributte/Middlewares
 	-
@@ -161,6 +162,9 @@ services:
 		tags: [apitte.core.controller]
 	-
 		factory: App\Controllers\TwitchController
+		tags: [apitte.core.controller]
+	-
+		factory: App\Controllers\AiController
 		tags: [apitte.core.controller]
 
 extensions:
