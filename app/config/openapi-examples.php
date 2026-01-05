@@ -1368,4 +1368,237 @@ return [
             'paths' => '...'
         ]
     ],
+
+    // AI Services
+    '/ai/providers' => [
+        'get' => [
+            'data' => [
+                'groq' => [
+                    'name' => 'Groq',
+                    'description' => 'Ultra-fast inference with open-source models',
+                    'available' => true,
+                    'models' => [
+                        'llama-3.3-70b-versatile' => 'Llama 3.3 70B - nejlepší kvalita',
+                        'llama-3.1-8b-instant' => 'Llama 3.1 8B - rychlý',
+                        'mixtral-8x7b-32768' => 'Mixtral 8x7B - vyvážený',
+                        'gemma2-9b-it' => 'Gemma 2 9B - kompaktní'
+                    ],
+                    'default_model' => 'llama-3.3-70b-versatile'
+                ],
+                'gemini' => [
+                    'name' => 'Google Gemini',
+                    'description' => 'Google multimodal AI with up to 1M token context',
+                    'available' => true,
+                    'models' => [
+                        'gemini-2.0-flash' => 'Gemini 2.0 Flash - rychlý a versatilní',
+                        'gemini-2.5-flash' => 'Gemini 2.5 Flash - multimodální, 1M tokenů',
+                        'gemini-2.5-pro' => 'Gemini 2.5 Pro - nejlepší kvalita'
+                    ],
+                    'default_model' => 'gemini-2.0-flash'
+                ],
+                'openrouter' => [
+                    'name' => 'OpenRouter',
+                    'description' => 'Access to many AI models including DeepSeek, Llama, Mistral',
+                    'available' => true,
+                    'models' => [
+                        'nex-agi/deepseek-v3.1-nex-n1:free' => 'Nex AGI: DeepSeek V3.1 Nex N1 (free)',
+                        'meta-llama/llama-3.3-70b-instruct:free' => 'Meta: Llama 3.3 70B Instruct (free)'
+                    ],
+                    'default_model' => 'nex-agi/deepseek-v3.1-nex-n1:free'
+                ]
+            ]
+        ]
+    ],
+    '/ai/chat' => [
+        'get' => [
+            'data' => [
+                'provider' => 'groq',
+                'model' => 'llama-3.3-70b-versatile',
+                'model_description' => 'Llama 3.3 70B - nejlepší kvalita',
+                'response' => 'Hlavní město Francie je Paříž.',
+                'usage' => [
+                    'prompt_tokens' => 25,
+                    'completion_tokens' => 15,
+                    'total_tokens' => 40
+                ],
+                'duration_ms' => 850,
+                'finish_reason' => 'stop',
+                'smart_routing' => [
+                    'primary_provider' => 'gemini',
+                    'used_provider' => 'groq',
+                    'fallback_used' => true,
+                    'fallback_reason' => 'Gemini rate limit: HTTP 429'
+                ]
+            ]
+        ]
+    ],
+    '/ai/groq/chat' => [
+        'get' => [
+            'data' => [
+                'provider' => 'groq',
+                'model' => 'llama-3.3-70b-versatile',
+                'model_description' => 'Llama 3.3 70B - nejlepší kvalita',
+                'response' => 'Hello! I am Llama, an AI assistant.',
+                'usage' => [
+                    'prompt_tokens' => 15,
+                    'completion_tokens' => 25,
+                    'total_tokens' => 40
+                ],
+                'duration_ms' => 326,
+                'finish_reason' => 'stop'
+            ]
+        ]
+    ],
+    '/ai/groq/models' => [
+        'get' => [
+            'data' => [
+                'provider' => 'groq',
+                'models' => [
+                    'llama-3.3-70b-versatile' => 'Llama 3.3 70B - nejlepší kvalita',
+                    'llama-3.1-8b-instant' => 'Llama 3.1 8B - rychlý',
+                    'mixtral-8x7b-32768' => 'Mixtral 8x7B - vyvážený',
+                    'gemma2-9b-it' => 'Gemma 2 9B - kompaktní'
+                ],
+                'default_model' => 'llama-3.3-70b-versatile',
+                'available' => true
+            ]
+        ]
+    ],
+    '/ai/gemini/chat' => [
+        'get' => [
+            'data' => [
+                'provider' => 'gemini',
+                'model' => 'gemini-2.0-flash',
+                'model_description' => 'Gemini 2.0 Flash - rychlý a versatilní',
+                'response' => 'Paříž je hlavní město Francie.',
+                'usage' => [
+                    'prompt_tokens' => 10,
+                    'completion_tokens' => 20,
+                    'total_tokens' => 30
+                ],
+                'duration_ms' => 1200,
+                'finish_reason' => 'STOP'
+            ]
+        ]
+    ],
+    '/ai/gemini/models' => [
+        'get' => [
+            'data' => [
+                'provider' => 'gemini',
+                'models' => [
+                    'gemini-2.0-flash' => 'Gemini 2.0 Flash - rychlý a versatilní',
+                    'gemini-2.5-flash' => 'Gemini 2.5 Flash - multimodální, 1M tokenů',
+                    'gemini-2.5-pro' => 'Gemini 2.5 Pro - nejlepší kvalita'
+                ],
+                'default_model' => 'gemini-2.0-flash',
+                'available' => true
+            ]
+        ]
+    ],
+    '/ai/openrouter/chat' => [
+        'get' => [
+            'data' => [
+                'provider' => 'openrouter',
+                'model' => 'nex-agi/deepseek-v3.1-nex-n1:free',
+                'model_description' => 'Nex AGI: DeepSeek V3.1 Nex N1 (free)',
+                'response' => 'Ahoj! Jak ti mohu pomoci?',
+                'usage' => [
+                    'prompt_tokens' => 593,
+                    'completion_tokens' => 26,
+                    'total_tokens' => 619
+                ],
+                'duration_ms' => 5670,
+                'finish_reason' => 'stop'
+            ]
+        ]
+    ],
+    '/ai/openrouter/models' => [
+        'get' => [
+            'data' => [
+                'provider' => 'openrouter',
+                'models' => [
+                    'deepseek/deepseek-r1-0528:free' => 'DeepSeek: R1 0528 (free)',
+                    'nex-agi/deepseek-v3.1-nex-n1:free' => 'Nex AGI: DeepSeek V3.1 Nex N1 (free)',
+                    'meta-llama/llama-3.3-70b-instruct:free' => 'Meta: Llama 3.3 70B Instruct (free)',
+                    'mistralai/devstral-2512:free' => 'Mistral: Devstral 2 2512 (free)'
+                ],
+                'default_model' => 'nex-agi/deepseek-v3.1-nex-n1:free',
+                'available' => true
+            ]
+        ]
+    ],
+    '/ai/summarize' => [
+        'get' => [
+            'data' => [
+                'task' => 'summarize',
+                'language' => 'cs',
+                'provider' => 'groq',
+                'model' => 'llama-3.3-70b-versatile',
+                'response' => 'Automobil je čtyřkolový dopravní prostředek z 19. století, dnes existují i elektrické varianty.',
+                'usage' => [
+                    'prompt_tokens' => 50,
+                    'completion_tokens' => 30,
+                    'total_tokens' => 80
+                ],
+                'duration_ms' => 650
+            ]
+        ]
+    ],
+    '/ai/translate' => [
+        'get' => [
+            'data' => [
+                'task' => 'translate',
+                'source_language' => null,
+                'target_language' => 'cs',
+                'provider' => 'groq',
+                'model' => 'llama-3.3-70b-versatile',
+                'response' => 'Ahoj světe, jak se máte dnes?',
+                'usage' => [
+                    'prompt_tokens' => 35,
+                    'completion_tokens' => 15,
+                    'total_tokens' => 50
+                ],
+                'duration_ms' => 420
+            ]
+        ]
+    ],
+    '/ai/sentiment' => [
+        'get' => [
+            'data' => [
+                'task' => 'sentiment',
+                'provider' => 'groq',
+                'model' => 'llama-3.3-70b-versatile',
+                'response' => 'Text vyjadřuje pozitivní náladu a spokojenost',
+                'sentiment' => [
+                    'sentiment' => 'positive',
+                    'confidence' => 0.9,
+                    'emotions' => ['radost', 'spokojenost'],
+                    'summary' => 'Text vyjadřuje pozitivní náladu a spokojenost'
+                ],
+                'usage' => [
+                    'prompt_tokens' => 45,
+                    'completion_tokens' => 60,
+                    'total_tokens' => 105
+                ],
+                'duration_ms' => 580
+            ]
+        ]
+    ],
+    '/ai/code' => [
+        'get' => [
+            'data' => [
+                'task' => 'code_generation',
+                'programming_language' => 'python',
+                'provider' => 'groq',
+                'model' => 'llama-3.3-70b-versatile',
+                'response' => "```python\ndef factorial(n):\n    if n <= 1:\n        return 1\n    return n * factorial(n-1)\n```",
+                'usage' => [
+                    'prompt_tokens' => 30,
+                    'completion_tokens' => 80,
+                    'total_tokens' => 110
+                ],
+                'duration_ms' => 720
+            ]
+        ]
+    ],
 ];
