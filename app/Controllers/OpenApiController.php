@@ -22,6 +22,9 @@ final class OpenApiController extends BaseController
     ) {
     }
 
+    /** @var string[] Paths to exclude from OpenAPI spec */
+    private const EXCLUDED_PATHS = ['/admin', '/openapi'];
+
     #[Path('/spec')]
     #[Method('GET')]
     public function getSpec(ApiRequest $request, ApiResponse $response): ApiResponse
@@ -29,6 +32,9 @@ final class OpenApiController extends BaseController
         try {
             $schema = $this->schemaBuilder->build();
             $schemaArray = $schema->toArray();
+
+            // Filter out internal endpoints
+            $schemaArray = $this->filterPaths($schemaArray);
 
             // Load and merge examples
             $schemaArray = $this->mergeExamples($schemaArray);
@@ -45,6 +51,41 @@ final class OpenApiController extends BaseController
                 500
             );
         }
+    }
+
+    /**
+     * Filter out internal endpoints from OpenAPI spec.
+     */
+    private function filterPaths(array $schema): array
+    {
+        if (!isset($schema['paths'])) {
+            return $schema;
+        }
+
+        $filteredPaths = [];
+        foreach ($schema['paths'] as $path => $methods) {
+            $exclude = false;
+            foreach (self::EXCLUDED_PATHS as $excludedPath) {
+                if (str_starts_with($path, $excludedPath)) {
+                    $exclude = true;
+                    break;
+                }
+            }
+            if (!$exclude) {
+                $filteredPaths[$path] = $methods;
+            }
+        }
+
+        $schema['paths'] = $filteredPaths;
+
+        // Also filter tags
+        if (isset($schema['tags'])) {
+            $schema['tags'] = array_values(array_filter($schema['tags'], function ($tag) {
+                return !in_array($tag['name'] ?? '', ['Admin', 'Documentation']);
+            }));
+        }
+
+        return $schema;
     }
 
     /**
