@@ -98,9 +98,10 @@ final class AiService
         }
 
         try {
-            $response = $this->httpClient->get('https://openrouter.ai/api/v1/models');
+            $responseStr = $this->httpClient->get('https://openrouter.ai/api/v1/models');
+            $response = json_decode($responseStr, true);
 
-            if (!isset($response['data']) || !is_array($response['data'])) {
+            if (!is_array($response) || !isset($response['data']) || !is_array($response['data'])) {
                 return $this->getOpenRouterFallbackModels();
             }
 
@@ -112,7 +113,7 @@ final class AiService
                     $completionPrice = (float) ($model['pricing']['completion'] ?? 1);
 
                     if ($promptPrice == 0 && $completionPrice == 0) {
-                        $freeModels[$model['id']] = $model['name'] . ' (free)';
+                        $freeModels[$model['id']] = $model['name'];
                     }
                 }
             }
