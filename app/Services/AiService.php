@@ -313,7 +313,7 @@ final class AiService
             throw new \RuntimeException('Gemini API klíč není nakonfigurován');
         }
 
-        $model = $model ?? 'gemini-1.5-flash';
+        $model = $model ?? 'gemini-2.0-flash';
 
         if (!isset(self::GEMINI_MODELS[$model])) {
             throw new \RuntimeException("Neplatný Gemini model: {$model}");
