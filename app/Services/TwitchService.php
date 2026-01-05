@@ -340,6 +340,35 @@ final class TwitchService
     }
 
     /**
+     * Get follower count for a broadcaster
+     *
+     * @param string $broadcasterId Broadcaster user ID
+     * @return int Number of followers
+     */
+    public function getFollowerCount(string $broadcasterId): int
+    {
+        $cacheKey = 'twitch_followers_' . $broadcasterId . '_' . date('YmdHi');
+
+        $cached = $this->cache->load($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $data = $this->twitchRequest('/channels/followers', [
+            'broadcaster_id' => $broadcasterId,
+            'first' => 1,
+        ]);
+
+        $count = $data['total'] ?? 0;
+
+        $this->cache->save($cacheKey, $count, [
+            Cache::EXPIRE => self::CACHE_STREAMS_EXPIRATION,
+        ]);
+
+        return $count;
+    }
+
+    /**
      * Get user/channel information by login name
      *
      * @param string $login User login name
@@ -364,8 +393,11 @@ final class TwitchService
             throw new \RuntimeException("User '{$login}' not found on Twitch");
         }
 
+        $user = $data['data'][0];
+        $followerCount = $this->getFollowerCount($user['id']);
+
         $result = [
-            'data' => $this->formatUser($data['data'][0]),
+            'data' => array_merge($this->formatUser($user), ['follower_count' => $followerCount]),
             'timestamp' => date('Y-m-d H:i:s'),
         ];
 
@@ -405,15 +437,16 @@ final class TwitchService
         $user = $userData['data'][0];
         $userId = $user['id'];
 
-        // Get stream info
+        // Get stream info and follower count
         $streamData = $this->twitchRequest('/streams', ['user_id' => $userId]);
+        $followerCount = $this->getFollowerCount($userId);
 
         $isLive = !empty($streamData['data']);
         $stream = $isLive ? $this->formatStream($streamData['data'][0]) : null;
 
         $result = [
             'data' => [
-                'user' => $this->formatUser($user),
+                'user' => array_merge($this->formatUser($user), ['follower_count' => $followerCount]),
                 'is_live' => $isLive,
                 'stream' => $stream,
             ],
@@ -438,6 +471,246 @@ final class TwitchService
     public function getStreamsByGame(string $gameId, int $limit = self::DEFAULT_LIMIT, ?string $language = null): array
     {
         return $this->getStreams($limit, $language, $gameId);
+    }
+
+    /**
+     * Get clips for a broadcaster or game
+     *
+     * @param string|null $broadcasterId Broadcaster ID
+     * @param string|null $gameId Game ID
+     * @param int $limit Number of clips (1-100)
+     * @return array{data: array<int, array<string, mixed>>, pagination: array<string, string>}
+     */
+    public function getClips(?string $broadcasterId = null, ?string $gameId = null, int $limit = self::DEFAULT_LIMIT): array
+    {
+        if ($broadcasterId === null && $gameId === null) {
+            throw new \RuntimeException('Either broadcaster_id or game_id is required');
+        }
+
+        $limit = min(max(1, $limit), self::MAX_LIMIT);
+
+        $cacheKey = 'twitch_clips_' . ($broadcasterId ?? '') . '_' . ($gameId ?? '') . '_' . $limit . '_' . date('YmdHi');
+
+        $cached = $this->cache->load($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $params = ['first' => $limit];
+        if ($broadcasterId !== null) {
+            $params['broadcaster_id'] = $broadcasterId;
+        }
+        if ($gameId !== null) {
+            $params['game_id'] = $gameId;
+        }
+
+        $data = $this->twitchRequest('/clips', $params);
+
+        $result = [
+            'data' => array_map([$this, 'formatClip'], $data['data'] ?? []),
+            'pagination' => $data['pagination'] ?? [],
+            'timestamp' => date('Y-m-d H:i:s'),
+        ];
+
+        $this->cache->save($cacheKey, $result, [
+            Cache::EXPIRE => self::CACHE_STREAMS_EXPIRATION,
+        ]);
+
+        return $result;
+    }
+
+    /**
+     * Get videos for a broadcaster
+     *
+     * @param string $userId User/broadcaster ID
+     * @param int $limit Number of videos
+     * @param string $type Video type (all, archive, highlight, upload)
+     * @return array{data: array<int, array<string, mixed>>, pagination: array<string, string>}
+     */
+    public function getVideos(string $userId, int $limit = self::DEFAULT_LIMIT, string $type = 'all'): array
+    {
+        $limit = min(max(1, $limit), self::MAX_LIMIT);
+
+        $cacheKey = 'twitch_videos_' . $userId . '_' . $type . '_' . $limit . '_' . date('YmdHi');
+
+        $cached = $this->cache->load($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $params = [
+            'user_id' => $userId,
+            'first' => $limit,
+        ];
+
+        if ($type !== 'all') {
+            $params['type'] = $type;
+        }
+
+        $data = $this->twitchRequest('/videos', $params);
+
+        $result = [
+            'data' => array_map([$this, 'formatVideo'], $data['data'] ?? []),
+            'pagination' => $data['pagination'] ?? [],
+            'timestamp' => date('Y-m-d H:i:s'),
+        ];
+
+        $this->cache->save($cacheKey, $result, [
+            Cache::EXPIRE => self::CACHE_GAMES_EXPIRATION,
+        ]);
+
+        return $result;
+    }
+
+    /**
+     * Get channel schedule
+     *
+     * @param string $broadcasterId Broadcaster ID
+     * @return array{data: array<string, mixed>}
+     */
+    public function getSchedule(string $broadcasterId): array
+    {
+        $cacheKey = 'twitch_schedule_' . $broadcasterId . '_' . date('YmdH');
+
+        $cached = $this->cache->load($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $data = $this->twitchRequest('/schedule', ['broadcaster_id' => $broadcasterId]);
+
+        $result = [
+            'data' => $data['data'] ?? null,
+            'timestamp' => date('Y-m-d H:i:s'),
+        ];
+
+        $this->cache->save($cacheKey, $result, [
+            Cache::EXPIRE => self::CACHE_USERS_EXPIRATION,
+        ]);
+
+        return $result;
+    }
+
+    /**
+     * Get channel emotes
+     *
+     * @param string $broadcasterId Broadcaster ID
+     * @return array{data: array<int, array<string, mixed>>}
+     */
+    public function getChannelEmotes(string $broadcasterId): array
+    {
+        $cacheKey = 'twitch_emotes_' . $broadcasterId . '_' . date('YmdH');
+
+        $cached = $this->cache->load($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $data = $this->twitchRequest('/chat/emotes', ['broadcaster_id' => $broadcasterId]);
+
+        $result = [
+            'data' => array_map([$this, 'formatEmote'], $data['data'] ?? []),
+            'template' => $data['template'] ?? null,
+            'timestamp' => date('Y-m-d H:i:s'),
+        ];
+
+        $this->cache->save($cacheKey, $result, [
+            Cache::EXPIRE => self::CACHE_USERS_EXPIRATION,
+        ]);
+
+        return $result;
+    }
+
+    /**
+     * Get global Twitch emotes
+     *
+     * @return array{data: array<int, array<string, mixed>>}
+     */
+    public function getGlobalEmotes(): array
+    {
+        $cacheKey = 'twitch_global_emotes_' . date('YmdH');
+
+        $cached = $this->cache->load($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $data = $this->twitchRequest('/chat/emotes/global');
+
+        $result = [
+            'data' => array_map([$this, 'formatEmote'], $data['data'] ?? []),
+            'template' => $data['template'] ?? null,
+            'timestamp' => date('Y-m-d H:i:s'),
+        ];
+
+        $this->cache->save($cacheKey, $result, [
+            Cache::EXPIRE => '1 hour',
+        ]);
+
+        return $result;
+    }
+
+    /**
+     * Get cheermotes (bit emotes)
+     *
+     * @param string|null $broadcasterId Optional broadcaster ID
+     * @return array{data: array<int, array<string, mixed>>}
+     */
+    public function getCheermotes(?string $broadcasterId = null): array
+    {
+        $cacheKey = 'twitch_cheermotes_' . ($broadcasterId ?? 'global') . '_' . date('YmdH');
+
+        $cached = $this->cache->load($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $params = [];
+        if ($broadcasterId !== null) {
+            $params['broadcaster_id'] = $broadcasterId;
+        }
+
+        $data = $this->twitchRequest('/bits/cheermotes', $params);
+
+        $result = [
+            'data' => $data['data'] ?? [],
+            'timestamp' => date('Y-m-d H:i:s'),
+        ];
+
+        $this->cache->save($cacheKey, $result, [
+            Cache::EXPIRE => '1 hour',
+        ]);
+
+        return $result;
+    }
+
+    /**
+     * Get chat badges for a channel
+     *
+     * @param string $broadcasterId Broadcaster ID
+     * @return array{data: array<int, array<string, mixed>>}
+     */
+    public function getChannelBadges(string $broadcasterId): array
+    {
+        $cacheKey = 'twitch_badges_' . $broadcasterId . '_' . date('YmdH');
+
+        $cached = $this->cache->load($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $data = $this->twitchRequest('/chat/badges', ['broadcaster_id' => $broadcasterId]);
+
+        $result = [
+            'data' => $data['data'] ?? [],
+            'timestamp' => date('Y-m-d H:i:s'),
+        ];
+
+        $this->cache->save($cacheKey, $result, [
+            Cache::EXPIRE => self::CACHE_USERS_EXPIRATION,
+        ]);
+
+        return $result;
     }
 
     /**
@@ -553,6 +826,77 @@ final class TwitchService
             'offline_image_url' => $user['offline_image_url'] ?? null,
             'view_count' => $user['view_count'] ?? 0,
             'created_at' => $user['created_at'] ?? null,
+        ];
+    }
+
+    /**
+     * Format clip data for API response
+     */
+    private function formatClip(array $clip): array
+    {
+        return [
+            'id' => $clip['id'] ?? null,
+            'url' => $clip['url'] ?? null,
+            'embed_url' => $clip['embed_url'] ?? null,
+            'broadcaster_id' => $clip['broadcaster_id'] ?? null,
+            'broadcaster_name' => $clip['broadcaster_name'] ?? null,
+            'creator_id' => $clip['creator_id'] ?? null,
+            'creator_name' => $clip['creator_name'] ?? null,
+            'video_id' => $clip['video_id'] ?? null,
+            'game_id' => $clip['game_id'] ?? null,
+            'language' => $clip['language'] ?? null,
+            'title' => $clip['title'] ?? null,
+            'view_count' => $clip['view_count'] ?? 0,
+            'created_at' => $clip['created_at'] ?? null,
+            'thumbnail_url' => $clip['thumbnail_url'] ?? null,
+            'duration' => $clip['duration'] ?? 0,
+            'vod_offset' => $clip['vod_offset'] ?? null,
+        ];
+    }
+
+    /**
+     * Format video data for API response
+     */
+    private function formatVideo(array $video): array
+    {
+        return [
+            'id' => $video['id'] ?? null,
+            'stream_id' => $video['stream_id'] ?? null,
+            'user_id' => $video['user_id'] ?? null,
+            'user_login' => $video['user_login'] ?? null,
+            'user_name' => $video['user_name'] ?? null,
+            'title' => $video['title'] ?? null,
+            'description' => $video['description'] ?? null,
+            'created_at' => $video['created_at'] ?? null,
+            'published_at' => $video['published_at'] ?? null,
+            'url' => $video['url'] ?? null,
+            'thumbnail_url' => isset($video['thumbnail_url'])
+                ? str_replace(['%{width}', '%{height}'], ['320', '180'], $video['thumbnail_url'])
+                : null,
+            'viewable' => $video['viewable'] ?? null,
+            'view_count' => $video['view_count'] ?? 0,
+            'language' => $video['language'] ?? null,
+            'type' => $video['type'] ?? null,
+            'duration' => $video['duration'] ?? null,
+            'muted_segments' => $video['muted_segments'] ?? [],
+        ];
+    }
+
+    /**
+     * Format emote data for API response
+     */
+    private function formatEmote(array $emote): array
+    {
+        return [
+            'id' => $emote['id'] ?? null,
+            'name' => $emote['name'] ?? null,
+            'images' => $emote['images'] ?? [],
+            'tier' => $emote['tier'] ?? null,
+            'emote_type' => $emote['emote_type'] ?? null,
+            'emote_set_id' => $emote['emote_set_id'] ?? null,
+            'format' => $emote['format'] ?? [],
+            'scale' => $emote['scale'] ?? [],
+            'theme_mode' => $emote['theme_mode'] ?? [],
         ];
     }
 }

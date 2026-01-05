@@ -230,4 +230,161 @@ final class TwitchController extends BaseController
             return $this->createErrorResponse($response, $e->getMessage(), 500);
         }
     }
+
+    #[Path('/channel/{broadcaster_id}/clips')]
+    #[Method('GET')]
+    #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'path', required: true, description: 'Broadcaster ID')]
+    #[RequestParameter(name: 'limit', type: 'int', in: 'query', required: false, description: 'Number of clips (1-100, default: 20)')]
+    #[ApiResponse(code: '200', description: 'List of clips for the broadcaster')]
+    #[ApiResponse(code: '500', description: 'Internal server error')]
+    public function getChannelClips(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
+    {
+        try {
+            $broadcasterId = $request->getParameter('broadcaster_id');
+            $limit = (int) ($request->getParameter('limit') ?? 20);
+
+            $data = $this->twitchService->getClips($broadcasterId, null, $limit);
+            return $this->createSuccessResponse($response, $data);
+        } catch (\RuntimeException $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 400);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 500);
+        }
+    }
+
+    #[Path('/channel/{broadcaster_id}/videos')]
+    #[Method('GET')]
+    #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'path', required: true, description: 'Broadcaster ID')]
+    #[RequestParameter(name: 'limit', type: 'int', in: 'query', required: false, description: 'Number of videos (1-100, default: 20)')]
+    #[RequestParameter(name: 'type', type: 'string', in: 'query', required: false, description: 'Video type (all, archive, highlight, upload)')]
+    #[ApiResponse(code: '200', description: 'List of videos for the broadcaster')]
+    #[ApiResponse(code: '500', description: 'Internal server error')]
+    public function getChannelVideos(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
+    {
+        try {
+            $broadcasterId = $request->getParameter('broadcaster_id');
+            $limit = (int) ($request->getParameter('limit') ?? 20);
+            $type = $request->getParameter('type') ?? 'all';
+
+            $data = $this->twitchService->getVideos($broadcasterId, $limit, $type);
+            return $this->createSuccessResponse($response, $data);
+        } catch (\RuntimeException $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 400);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 500);
+        }
+    }
+
+    #[Path('/channel/{broadcaster_id}/schedule')]
+    #[Method('GET')]
+    #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'path', required: true, description: 'Broadcaster ID')]
+    #[ApiResponse(code: '200', description: 'Channel stream schedule')]
+    #[ApiResponse(code: '500', description: 'Internal server error')]
+    public function getChannelSchedule(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
+    {
+        try {
+            $broadcasterId = $request->getParameter('broadcaster_id');
+
+            $data = $this->twitchService->getSchedule($broadcasterId);
+            return $this->createSuccessResponse($response, $data);
+        } catch (\RuntimeException $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 400);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 500);
+        }
+    }
+
+    #[Path('/channel/{broadcaster_id}/emotes')]
+    #[Method('GET')]
+    #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'path', required: true, description: 'Broadcaster ID')]
+    #[ApiResponse(code: '200', description: 'List of channel emotes')]
+    #[ApiResponse(code: '500', description: 'Internal server error')]
+    public function getChannelEmotes(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
+    {
+        try {
+            $broadcasterId = $request->getParameter('broadcaster_id');
+
+            $data = $this->twitchService->getChannelEmotes($broadcasterId);
+            return $this->createSuccessResponse($response, $data);
+        } catch (\RuntimeException $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 400);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 500);
+        }
+    }
+
+    #[Path('/channel/{broadcaster_id}/badges')]
+    #[Method('GET')]
+    #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'path', required: true, description: 'Broadcaster ID')]
+    #[ApiResponse(code: '200', description: 'List of channel chat badges')]
+    #[ApiResponse(code: '500', description: 'Internal server error')]
+    public function getChannelBadges(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
+    {
+        try {
+            $broadcasterId = $request->getParameter('broadcaster_id');
+
+            $data = $this->twitchService->getChannelBadges($broadcasterId);
+            return $this->createSuccessResponse($response, $data);
+        } catch (\RuntimeException $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 400);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 500);
+        }
+    }
+
+    #[Path('/emotes/global')]
+    #[Method('GET')]
+    #[ApiResponse(code: '200', description: 'List of global Twitch emotes')]
+    #[ApiResponse(code: '500', description: 'Internal server error')]
+    public function getGlobalEmotes(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
+    {
+        try {
+            $data = $this->twitchService->getGlobalEmotes();
+            return $this->createSuccessResponse($response, $data);
+        } catch (\RuntimeException $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 400);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 500);
+        }
+    }
+
+    #[Path('/cheermotes')]
+    #[Method('GET')]
+    #[RequestParameter(name: 'broadcaster_id', type: 'string', in: 'query', required: false, description: 'Optional broadcaster ID for channel-specific cheermotes')]
+    #[ApiResponse(code: '200', description: 'List of cheermotes (bit emotes)')]
+    #[ApiResponse(code: '500', description: 'Internal server error')]
+    public function getCheermotes(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
+    {
+        try {
+            $broadcasterId = $request->getParameter('broadcaster_id');
+
+            $data = $this->twitchService->getCheermotes($broadcasterId);
+            return $this->createSuccessResponse($response, $data);
+        } catch (\RuntimeException $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 400);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 500);
+        }
+    }
+
+    #[Path('/game/{game_id}/clips')]
+    #[Method('GET')]
+    #[RequestParameter(name: 'game_id', type: 'string', in: 'path', required: true, description: 'Game ID')]
+    #[RequestParameter(name: 'limit', type: 'int', in: 'query', required: false, description: 'Number of clips (1-100, default: 20)')]
+    #[ApiResponse(code: '200', description: 'List of clips for the game')]
+    #[ApiResponse(code: '500', description: 'Internal server error')]
+    public function getGameClips(ApiRequest $request, HttpApiResponse $response): HttpApiResponse
+    {
+        try {
+            $gameId = $request->getParameter('game_id');
+            $limit = (int) ($request->getParameter('limit') ?? 20);
+
+            $data = $this->twitchService->getClips(null, $gameId, $limit);
+            return $this->createSuccessResponse($response, $data);
+        } catch (\RuntimeException $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 400);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse($response, $e->getMessage(), 500);
+        }
+    }
 }
