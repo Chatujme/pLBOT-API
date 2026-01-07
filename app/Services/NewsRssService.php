@@ -204,6 +204,9 @@ final class NewsRssService
         // Potlačíme varování při parsování XML
         libxml_use_internal_errors(true);
 
+        // Sanitize UTF-8 - remove invalid characters
+        $rssContent = $this->sanitizeUtf8($rssContent);
+
         try {
             $xml = new SimpleXMLElement($rssContent);
             $articles = [];
@@ -216,24 +219,24 @@ final class NewsRssService
                 }
 
                 // Extrahujeme základní informace
-                $title = (string) $item->title;
+                $title = $this->sanitizeUtf8((string) $item->title);
                 $link = (string) $item->link;
-                $description = (string) $item->description;
+                $description = $this->sanitizeUtf8((string) $item->description);
                 $pubDate = (string) $item->pubDate;
 
                 // Pokusíme se extrahovat autora (může být v různých formátech)
                 $author = null;
                 if (isset($item->author) && !empty((string) $item->author)) {
-                    $author = (string) $item->author;
+                    $author = $this->sanitizeUtf8((string) $item->author);
                 } elseif (isset($item->children('dc', true)->creator)) {
-                    $author = (string) $item->children('dc', true)->creator;
+                    $author = $this->sanitizeUtf8((string) $item->children('dc', true)->creator);
                 }
 
                 // Vyčistíme HTML tagy z popisu a CDATA
                 $description = strip_tags($description);
                 $description = trim($description);
-                if (strlen($description) > 500) {
-                    $description = substr($description, 0, 497) . '...';
+                if (mb_strlen($description) > 500) {
+                    $description = mb_substr($description, 0, 497) . '...';
                 }
 
                 // Vyčistíme CDATA z titulku
@@ -261,6 +264,20 @@ final class NewsRssService
             libxml_clear_errors();
             throw new \RuntimeException("Chyba při parsování RSS feedu: {$e->getMessage()}", 0, $e);
         }
+    }
+
+    /**
+     * Sanitize string to valid UTF-8
+     */
+    private function sanitizeUtf8(string $string): string
+    {
+        // Remove invalid UTF-8 sequences
+        $string = mb_convert_encoding($string, 'UTF-8', 'UTF-8');
+
+        // Remove control characters except newlines and tabs
+        $string = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $string);
+
+        return $string ?? '';
     }
 
     private function getCacheKey(string $source, int $limit): string
