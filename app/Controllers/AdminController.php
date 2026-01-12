@@ -343,6 +343,70 @@ final class AdminController extends BaseController
         }
     }
 
+    #[Path('/stats/cleanup')]
+    #[Method('POST')]
+    public function cleanupSpam(ApiRequest $request, ApiResponse $response): ApiResponse
+    {
+        try {
+            // Require authentication
+            $authHeader = $request->getHeaderLine('Authorization');
+            $user = $this->authService->getCurrentUser($authHeader);
+
+            if ($user === null) {
+                return $this->createErrorResponse(
+                    $response,
+                    'Přihlášení vyžadováno',
+                    401
+                );
+            }
+
+            $result = $this->statsService->cleanSpamEntries();
+
+            return $this->createSuccessResponse($response, [
+                'message' => 'Spam záznamy byly vyčištěny',
+                'cleaned' => $result,
+            ]);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse(
+                $response,
+                'Nepodařilo se vyčistit spam: ' . $e->getMessage(),
+                500
+            );
+        }
+    }
+
+    #[Path('/stats/optimize')]
+    #[Method('POST')]
+    public function optimizeDatabase(ApiRequest $request, ApiResponse $response): ApiResponse
+    {
+        try {
+            // Require authentication
+            $authHeader = $request->getHeaderLine('Authorization');
+            $user = $this->authService->getCurrentUser($authHeader);
+
+            if ($user === null) {
+                return $this->createErrorResponse(
+                    $response,
+                    'Přihlášení vyžadováno',
+                    401
+                );
+            }
+
+            $result = $this->statsService->optimizeDatabase();
+
+            return $this->createSuccessResponse($response, [
+                'message' => 'Databáze byla optimalizována',
+                'result' => $result,
+            ]);
+        } catch (\Exception $e) {
+            return $this->createErrorResponse(
+                $response,
+                'Nepodařilo se optimalizovat databázi: ' . $e->getMessage(),
+                500
+            );
+        }
+    }
+
     #[Path('/change-password')]
     #[Method('POST')]
     public function changePassword(ApiRequest $request, ApiResponse $response): ApiResponse

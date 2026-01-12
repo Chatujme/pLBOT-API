@@ -26,10 +26,59 @@ final class StatsService
     }
 
     /**
+     * Patterns to ignore (scrapers, vulnerability scanners, non-API requests)
+     */
+    private const IGNORE_PATTERNS = [
+        '/\.php$/',           // PHP files (.php)
+        '/\.asp/',            // ASP files
+        '/\.env/',            // .env files
+        '/wp-/',              // WordPress
+        '/wordpress/',
+        '/\.git/',            // Git
+        '/\.config/',
+        '/cgi-bin/',
+        '/admin\./',          // admin.php etc
+        '/shell/',
+        '/backup/',
+        '/\.zip$/',
+        '/\.sql$/',
+        '/\.tar/',
+        '/\.bak$/',
+        '/phpmy/',            // phpMyAdmin
+        '/mysql/',
+        '/debug/',
+        '/test\./',
+        '/eval/',
+        '/\.well-known/',
+        '/robots\.txt/',
+        '/sitemap/',
+        '/favicon/',
+    ];
+
+    /**
+     * Check if path should be ignored (spam/scraper)
+     */
+    private function shouldIgnorePath(string $path): bool
+    {
+        $pathLower = strtolower($path);
+        foreach (self::IGNORE_PATTERNS as $pattern) {
+            if (preg_match($pattern, $pathLower)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Log API request with response time, IP and user agent
      */
     public function logRequest(string $path, string $method, int $statusCode, float $responseTime, ?string $ipAddress = null, ?string $userAgent = null): void
     {
+        // Skip spam/scraper requests
+        if ($this->shouldIgnorePath($path)) {
+            return;
+        }
+
         try {
             $this->pdo->beginTransaction();
 
@@ -311,6 +360,91 @@ final class StatsService
             return $stmt->rowCount();
         } catch (\Exception $e) {
             return 0;
+        }
+    }
+
+    /**
+     * Clean spam/scraper entries from database
+     */
+    public function cleanSpamEntries(): array
+    {
+        $cleaned = [
+            'requests' => 0,
+            'endpoints' => 0,
+            'patterns' => [],
+        ];
+
+        try {
+            $this->pdo->beginTransaction();
+
+            // Build SQL conditions from patterns
+            $conditions = [];
+            foreach (self::IGNORE_PATTERNS as $pattern) {
+                // Convert regex to SQL LIKE pattern
+                $sqlPattern = str_replace(['/', '\.', '$', '^'], ['', '.', '', ''], $pattern);
+                $sqlPattern = '%' . $sqlPattern . '%';
+                $conditions[] = "LOWER(path) LIKE " . $this->pdo->quote(strtolower($sqlPattern));
+                $cleaned['patterns'][] = $pattern;
+            }
+
+            // Also clean random .php files that slipped through
+            $conditions[] = "path LIKE '%.php'";
+            $conditions[] = "path LIKE '%.asp%'";
+
+            $whereClause = implode(' OR ', $conditions);
+
+            // Delete from stats_requests
+            $stmt = $this->pdo->exec("DELETE FROM stats_requests WHERE {$whereClause}");
+            $cleaned['requests'] = $stmt;
+
+            // Delete from stats_endpoints
+            $stmt = $this->pdo->exec("DELETE FROM stats_endpoints WHERE {$whereClause}");
+            $cleaned['endpoints'] = $stmt;
+
+            $this->pdo->commit();
+            $this->cache->remove('aggregated_stats');
+
+            // Vacuum to reclaim space
+            $this->pdo->exec("VACUUM");
+
+        } catch (\Exception $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            $cleaned['error'] = $e->getMessage();
+        }
+
+        return $cleaned;
+    }
+
+    /**
+     * Optimize database (vacuum and reindex)
+     */
+    public function optimizeDatabase(): array
+    {
+        try {
+            // Get size before
+            $dbPath = __DIR__ . '/../../data/plbot.db';
+            $sizeBefore = file_exists($dbPath) ? filesize($dbPath) : 0;
+
+            // Vacuum
+            $this->pdo->exec("VACUUM");
+
+            // Get size after
+            clearstatcache();
+            $sizeAfter = file_exists($dbPath) ? filesize($dbPath) : 0;
+
+            return [
+                'success' => true,
+                'size_before' => $this->formatBytes($sizeBefore),
+                'size_after' => $this->formatBytes($sizeAfter),
+                'saved' => $this->formatBytes($sizeBefore - $sizeAfter),
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
         }
     }
 
