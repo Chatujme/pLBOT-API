@@ -302,9 +302,10 @@ final class AdminController extends BaseController
     public function getFilteredRequests(ApiRequest $request, ApiResponse $response): ApiResponse
     {
         try {
-            $ip = $request->getQueryParam('ip');
-            $userAgent = $request->getQueryParam('user_agent');
-            $limit = (int) ($request->getQueryParam('limit') ?? 100);
+            $params = $request->getQueryParams();
+            $ip = $params['ip'] ?? null;
+            $userAgent = $params['user_agent'] ?? null;
+            $limit = (int) ($params['limit'] ?? 100);
 
             $requests = $this->statsService->getFilteredRequests($ip, $userAgent, min($limit, 500));
 
