@@ -1462,7 +1462,7 @@
                 if (ipData.by_ip && ipData.by_ip.length > 0) {
                     ipBody.innerHTML = ipData.by_ip.map(ip => `
                         <tr>
-                            <td><code>${ip.ip || 'unknown'}</code></td>
+                            <td><a href="#" class="ip-link" data-ip="${ip.ip || ''}" style="color: var(--accent-primary); text-decoration: none;"><code>${ip.ip || 'unknown'}</code> <i class="fas fa-search" style="font-size: 0.8em;"></i></a></td>
                             <td><strong>${ip.requests}</strong></td>
                             <td>${ip.unique_endpoints}</td>
                             <td>${ip.errors > 0 ? `<span style="color: var(--accent-danger);">${ip.errors}</span>` : '0'}</td>
@@ -1470,6 +1470,14 @@
                             <td>${ip.last_seen ? new Date(ip.last_seen).toLocaleTimeString('cs-CZ') : '-'}</td>
                         </tr>
                     `).join('');
+
+                    // Add click handlers for IP links
+                    document.querySelectorAll('.ip-link').forEach(link => {
+                        link.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            showRequestsForIp(link.dataset.ip);
+                        });
+                    });
                 } else {
                     ipBody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>Žádná data</p></div></td></tr>';
                 }
@@ -1485,23 +1493,129 @@
                         const typeIcon = ua.type === 'bot' ? 'robot' : (ua.type === 'browser' ? 'globe' : 'question');
                         // Show full user agent, truncate if too long for display
                         const fullUA = ua.user_agent || ua.browser;
-                        const displayUA = fullUA.length > 80 ? fullUA.substring(0, 80) + '...' : fullUA;
+                        const displayUA = fullUA.length > 60 ? fullUA.substring(0, 60) + '...' : fullUA;
                         return `
                         <tr title="${fullUA.replace(/"/g, '&quot;')}">
                             <td><i class="fas fa-${typeIcon}" style="color: var(--${typeClass});"></i> ${ua.type}</td>
-                            <td style="font-family: monospace; font-size: 0.85em; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${displayUA}</td>
+                            <td><a href="#" class="ua-link" data-ua="${fullUA.replace(/"/g, '&quot;')}" style="color: var(--accent-primary); text-decoration: none; font-family: monospace; font-size: 0.85em;">${displayUA} <i class="fas fa-search" style="font-size: 0.8em;"></i></a></td>
                             <td><strong>${ua.requests}</strong></td>
                             <td>${ua.unique_ips}</td>
                             <td>${ua.errors > 0 ? `<span style="color: var(--accent-danger);">${ua.errors}</span>` : '0'}</td>
                             <td><span class="time-badge">${Math.round(ua.avg_time)} ms</span></td>
                         </tr>
                     `}).join('');
+
+                    // Add click handlers for UA links
+                    document.querySelectorAll('.ua-link').forEach(link => {
+                        link.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            showRequestsForUserAgent(link.dataset.ua);
+                        });
+                    });
                 } else {
                     uaBody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>Žádná data</p></div></td></tr>';
                 }
             } catch (error) {
                 console.error('Failed to load client stats:', error);
             }
+        }
+
+        async function showRequestsForIp(ip) {
+            if (!ip) return;
+            try {
+                const response = await fetch(`../admin/stats/requests?ip=${encodeURIComponent(ip)}&limit=50`);
+                const data = await response.json();
+                showRequestsModal(`Requesty pro IP: ${ip}`, data.requests || []);
+            } catch (error) {
+                console.error('Failed to load IP requests:', error);
+            }
+        }
+
+        async function showRequestsForUserAgent(ua) {
+            if (!ua) return;
+            try {
+                const response = await fetch(`../admin/stats/requests?user_agent=${encodeURIComponent(ua)}&limit=50`);
+                const data = await response.json();
+                showRequestsModal(`Requesty pro: ${ua.substring(0, 50)}...`, data.requests || []);
+            } catch (error) {
+                console.error('Failed to load UA requests:', error);
+            }
+        }
+
+        function showRequestsModal(title, requests) {
+            // Remove existing modal if any
+            const existingModal = document.getElementById('requestsModal');
+            if (existingModal) existingModal.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'requestsModal';
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.8); z-index: 1000;
+                display: flex; align-items: center; justify-content: center;
+                padding: 20px;
+            `;
+
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: var(--bg-secondary); border-radius: 12px;
+                max-width: 1000px; width: 100%; max-height: 80vh;
+                display: flex; flex-direction: column;
+                border: 1px solid var(--border-color);
+            `;
+
+            content.innerHTML = `
+                <div style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0;"><i class="fas fa-list"></i> ${title}</h3>
+                    <button onclick="document.getElementById('requestsModal').remove()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.5em;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div style="overflow: auto; padding: 20px;">
+                    <table style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Čas</th>
+                                <th>Endpoint</th>
+                                <th>Metoda</th>
+                                <th>Status</th>
+                                <th>Čas odezvy</th>
+                                <th>IP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${requests.length > 0 ? requests.map(req => {
+                                const statusClass = req.status_code >= 400 ? 'accent-danger' : 'accent-success';
+                                return `
+                                <tr>
+                                    <td>${req.created_at ? new Date(req.created_at).toLocaleString('cs-CZ') : '-'}</td>
+                                    <td><span class="endpoint-path">${req.path}</span></td>
+                                    <td><span class="method-badge method-${req.method.toLowerCase()}">${req.method}</span></td>
+                                    <td><span style="color: var(--${statusClass});">${req.status_code}</span></td>
+                                    <td><span class="time-badge">${Math.round(req.response_time)} ms</span></td>
+                                    <td><code>${req.ip || '-'}</code></td>
+                                </tr>
+                            `}).join('') : '<tr><td colspan="6" style="text-align: center; padding: 40px;">Žádné requesty</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+
+            // Close on Escape
+            document.addEventListener('keydown', function closeOnEscape(e) {
+                if (e.key === 'Escape') {
+                    modal.remove();
+                    document.removeEventListener('keydown', closeOnEscape);
+                }
+            });
         }
 
         // Live update functions (polling fallback for environments where SSE doesn't work)
